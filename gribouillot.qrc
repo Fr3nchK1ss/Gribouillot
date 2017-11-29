@@ -1,0 +1,42 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Resources/Icons/image-x-generic.png</file>
+        <file>Resources/Icons/tab-new.png</file>
+        <file>Resources/Icons/visibility.png</file>
+        <file>Resources/Icons/delete-layer.svg</file>
+        <file>Resources/Icons/black-white.png</file>
+        <file>Resources/Icons/measure-tape-km.png</file>
+        <file>Resources/Icons/measure-tape-px.png</file>
+        <file>Resources/Icons/add-layer.svg</file>
+        <file>Resources/Icons/circle-center-radius.png</file>
+        <file>Resources/Icons/color-wheel.png</file>
+        <file>Resources/Icons/line.png</file>
+        <file>Resources/Icons/line-angle.png</file>
+        <file>Resources/Icons/line-bisection.png</file>
+        <file>Resources/Icons/line-horizontal.png</file>
+        <file>Resources/Icons/line-segment.png</file>
+        <file>Resources/Icons/line-vertical.png</file>
+        <file>Resources/Icons/protractor.png</file>
+        <file>Resources/Icons/circle-3points.png</file>
+        <file>Resources/Icons/circle-center-point.png</file>
+        <file>Resources/Icons/circle-diameter.png</file>
+        <file>Resources/Icons/line-point-parallel.png</file>
+        <file>Resources/Icons/line-point-perpendicular.png</file>
+        <file>Resources/Icons/point.png</file>
+        <file>Resources/Icons/draw-width-3.png</file>
+        <file>Resources/Icons/draw-width-5.png</file>
+        <file>Resources/Icons/draw-width-7.png</file>
+        <file>Resources/Icons/gps-on.png</file>
+        <file>Resources/Icons/gps-off.png</file>
+        <file>Resources/Icons/point-weight.png</file>
+        <file>Resources/Icons/draw-width-1.png</file>
+        <file>Resources/Icons/cursor-drawing.png</file>
+        <file>Resources/Icons/cursor-arrow.png</file>
+        <file>Resources/Icons/cursor-openhand.png</file>
+        <file>Resources/Icons/exclamation.png</file>
+        <file>Resources/Icons/arc-center-point-angle.png</file>
+        <file>Resources/Icons/circle-drawCenter.png</file>
+        <file>Resources/Icons/arc-2boundaries.png</file>
+        <file>Resources/Icons/spiral.png</file>
+    </qresource>
+</RCC>
