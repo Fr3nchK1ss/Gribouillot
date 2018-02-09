@@ -4,7 +4,7 @@
  *             a TabWidget for layers pages,
  *             a DockWidget for the drawing tools
  *  @author    Ludovic A. 
- *  @date      2015/2016/2017
+ *  @date      2015/2016/2017/2018
  *  @bug       No known bugs
  *  @copyright GNU Public License v3
  */
@@ -203,7 +203,7 @@ void Gribouillot::newSceneClickPreSelect(QPointF position)
 /**
  * @brief   Send the mouse clicks from scene AFTER default scene processing.
  * @details Important for item drawing starting with "if ( isOnlySelected(...) )"
- *          because he scene default processing is selecting a new item.
+ *          because the scene default processing is selecting a new item.
  */
 void Gribouillot::newSceneClickPostSelect(QPointF position)
 {
@@ -672,7 +672,7 @@ void Gribouillot::on_actionCursorDrag_triggered()
 {
     currentDrawing = NONE;
     statusBar()->clearMessage();
-    //Items may have been disabled by drawing functions
+    //Items cant be selected in Drag mode
     if(currentLayer != nullptr)
         currentLayer->disableItems();
 
@@ -683,7 +683,7 @@ void Gribouillot::on_actionCursorDrag_triggered()
 
 /**
  * @brief   call the colorDialog to select the drawing color
- * @details can be called by user using the click or the 'c' key to change
+ * @details can be called by a user click in toolbar or suing the 'c' key to change
  *          the color of the currently selected items.
  */
 void Gribouillot::on_actionChooseColor_triggered()
@@ -745,6 +745,16 @@ void Gribouillot::on_actionChooseColor_triggered()
  */
 void Gribouillot::on_actionChooseWidth_triggered()
 {
+    //TODO unselect all items
+    drawingWidth = (drawingWidth+2)%8;//drawingWidth is 1 or 3 or 5 or 7
+    QString iconPath = ":/Resources/Icons/draw-width-"+QString::number(drawingWidth)+".png";
+    ui->actionChooseWidth->setIcon(QIcon(QPixmap(iconPath)));
+
+}
+
+
+void Gribouillot::keyTFromScene()
+{
     if(!scene->selectedItems().isEmpty())
     {
         Dlg_penThickness dialog("Change the width of selected items.", drawingWidth);
@@ -775,20 +785,16 @@ void Gribouillot::on_actionChooseWidth_triggered()
                      Item_arc* a = qgraphicsitem_cast<Item_arc*>(item);
                      a->newPen(a->pen().color(), width);
                  }
+                 else if (item->type() == SPIRAL)
+                 {
+                     Item_spiral* s = qgraphicsitem_cast<Item_spiral*>(item);
+                     s->newPen(s->pen().color(), width);
+                 }
 
               }
         }
     }
-    else
-    {
-        drawingWidth = (drawingWidth+2)%8;//drawingWidth is 1 or 3 or 5 or 7
-        QString iconPath = ":/Resources/Icons/draw-width-"+QString::number(drawingWidth)+".png";
-        ui->actionChooseWidth->setIcon(QIcon(QPixmap(iconPath)));
-
-    }
-
 }
-
 
 /**
  * @brief   measuring tape in kilometers

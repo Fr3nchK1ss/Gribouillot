@@ -2,7 +2,7 @@
  *  @brief
  *  @details
  *  @author    Ludovic A. 
- *  @date      2015 /2016/2017
+ *  @date      2015 /2016/2017/2018
  *  @bug       No known bugs
  *  @copyright GNU Public License v3
  */
@@ -156,6 +156,7 @@ private slots:
     void on_actionCursorSelect_triggered();
     void on_actionChooseColor_triggered();
     void on_actionChooseWidth_triggered();
+    void keyTFromScene();
     void on_actionMeasureDistance_toggled(bool isChecked);
     void measureDistance(qreal distance);
 

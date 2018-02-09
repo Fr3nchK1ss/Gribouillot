@@ -4,7 +4,7 @@
  *             a TabWidget for layers pages,
  *             a DockWidget for the drawing tools
  *  @author    Ludovic A. 
- *  @date      2015/2016/2017
+ *  @date      2015/2016/2017/2018
  *  @bug       No known bugs
  *  @copyright GNU Public License v3
  */
@@ -80,7 +80,7 @@ Gribouillot::Gribouillot(QWidget *parent) :
     connect (scene, SIGNAL(keyDeletePressed()), this, SLOT(keyDeleteFromScene()));
     connect (scene, SIGNAL(keySpacePressed()), this, SLOT(keySpaceFromScene()));
     connect (scene, SIGNAL(keyCPressed()), this, SLOT(on_actionChooseColor_triggered()));
-    connect (scene, SIGNAL(keyTPressed()), this, SLOT(on_actionChooseWidth_triggered()));
+    connect (scene, SIGNAL(keyTPressed()), this, SLOT(keyTFromScene()));
 
     //Connect mapTabWidget to zGraphicsView in order to update the black & white scale bar
     connect(ui->mapTabWidget, SIGNAL(newSystemScale(qreal, QString)), ui->zGraphicsView, SLOT(systemScaleChanged(qreal, QString)));

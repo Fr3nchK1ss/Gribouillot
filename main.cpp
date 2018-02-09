@@ -3,7 +3,7 @@
  *  @details   This software allows for drawing on maps using layers.
  *             Mathematical tools are provided for measuring, drawing lines & circles, etc
  *  @author    Ludovic A. 
- *  @date      2015/2016/2017
+ *  @date      2015/2016/2017/2018
  *  @bug       No known bugs
  *  @copyright GNU Public License v3
  */

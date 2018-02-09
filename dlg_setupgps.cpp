@@ -2,7 +2,7 @@
  *  @brief
  *  @details
  *  @author    Ludovic A. 
- *  @date      2015 /2016/2017
+ *  @date      2015 /2016/2017/2018
  *  @bug       No known bugs
  *  @copyright GNU Public License v3
  */
@@ -60,7 +60,7 @@ void Dlg_setupGps::hideEvent(QHideEvent* event)
 {
     if(!event->spontaneous())
     {
-        /**
+        **
          * The beacons buttons can not be directly unchecked because they
          * are a part of an exclusive buttonGroup.
          *

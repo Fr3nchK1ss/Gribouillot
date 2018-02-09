@@ -2,7 +2,7 @@
  *  @brief
  *  @details
  *  @author    Ludovic A.
- *  @date      2015 /2016/2017
+ *  @date      2015 /2016/2017/2018
  *  @bug       No known bugs
  *  @copyright GNU Public License v3
  */
@@ -16,7 +16,7 @@
  * @brief   The QLineF58 class is QLineF with center()
  * @details From v5.8 the Qt library implements the center() function for QLineF
  *          but this lib is not available for 32 bits architecture! This class
- *          makes center() available for all arch.
+ *          makes center() available for all architectures or older Qt versions.
  */
 class QLineF58 : public QLineF
 {

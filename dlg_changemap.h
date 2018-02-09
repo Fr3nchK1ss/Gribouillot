@@ -2,7 +2,7 @@
  *  @brief
  *  @details
  *  @author    Ludovic A.
- *  @date      2015 /2016/2017/2018
+ *  @date      2015 /2016/2017/2018/2018
  *  @bug       No known bugs
  *  @copyright GNU Public License v3
  */
