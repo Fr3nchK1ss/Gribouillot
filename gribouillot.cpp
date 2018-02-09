@@ -18,6 +18,7 @@
 
 #include "dlg_newgribproject.h"
 #include "dlg_importlayer.h"
+#include "dlg_changemap.h"
 #include "gribouillot.h"
 #include "main.h"
 #include "zoomablegraphicsview.h"
@@ -120,8 +121,8 @@ Gribouillot::Gribouillot(QWidget *parent) :
 
     show();
 
-    openProject("/home/tyler/Dev/The Big Project/The Big Project.grib");//DEV
-    //openProject("D:/Dev/The Big Project/The Big Project.grib");//DEV
+    openProject("/home/tyler/Grib/The Big Project/The Big Project.grib");//DEV
+
 }
 
 Gribouillot::~Gribouillot()
@@ -138,8 +139,8 @@ Gribouillot::~Gribouillot()
  */
 void Gribouillot::closeEvent(QCloseEvent *event)
 {
-    //if(!currentProjectName.isEmpty())DEV
-      //  maybeSave();DEV
+    //if(!currentProjectName.isEmpty())//DEV
+      //  maybeSave();//DEV
     event->accept();
 }
 
@@ -202,7 +203,7 @@ void Gribouillot::setColorIcon(QColor color)
 
 
 /**
- * @brief Clear the GraphicsView
+ * @brief Clear the GraphicsView from drawing helps
  */
 void Gribouillot::clearView()
 {
@@ -210,7 +211,7 @@ void Gribouillot::clearView()
     {
         /*
          * Remove any "drawing help" item if the drawingView is
-         *  re-triggered or unchecked.
+         * re-triggered or unchecked.
          */
         foreach(QGraphicsItem* item, scene->items())
         {
@@ -229,9 +230,9 @@ void Gribouillot::clearView()
 
 
 /**
- * @brief   Set a specific cursor and a noDrag view for drawing on scene
+ * @brief   Set a specific T-cursor and a noDrag view for drawing on scene
  * @details Active when drawing actions are selected. By definition
- *          drawingView is exclusive of cursorDrag and cursorSelect actions.
+ *          drawingView is exclusive of cursorDrag and cursorSelect modes.
  */
 void Gribouillot::setDrawingView()
 {
@@ -252,7 +253,7 @@ void Gribouillot::setSelectionView()
     clearView();
     /*
      * It is not possible to manually check an action of the drawingGroup
-     * (see ActionGroup doc), EXCEPT when not one action is checked yet;
+     * (see QActionGroup doc), EXCEPT when not one action is checked yet;
      * which is the case here thanks to uncheckDrawingGroup().
      */
     uncheckDrawingGroup();
@@ -265,7 +266,7 @@ void Gribouillot::setSelectionView()
 /**
  * @brief   Uncheck any toolbar action.
  * @details Useful when using mapTabWidget toolButtons which can not be
- *          a part of the exclusive 'drawingGroup' actionGroup.
+ *          a part of the exclusive 'drawingGroup' QActionGroup.
  */
 void Gribouillot::uncheckDrawingGroup()
 {
@@ -404,13 +405,53 @@ void Gribouillot::openProject(QString gribFile)
 
         //Background map
         mapPath = settings.value("map/mapPath").toString();
-        loadBackgroundMap(mapPath);
         mapTabName = settings.value("map/mapTabName").toString();
-        if (!mapTabName.isEmpty())
+        QFileInfo mapFileInfo = QFileInfo(mapPath);
+
+        /* verify that mapPath is valid, the project folder may have
+         * been moved around the file system!
+         */
+        if ( !mapFileInfo.exists() )
         {
-            ui->tabWidget->setTabText(0, mapTabName);
-            ui->tabWidget->setTabToolTip(0, mapPath);
+            //map may still exists in the current dir though
+            QString possibleLocalFile = QDir::currentPath()+"/"+mapFileInfo.fileName();
+
+            if ( QFile::exists(possibleLocalFile) )
+            {
+                //ok, change mapPath to current path
+                mapPath = QDir::currentPath()+"/"+mapFileInfo.fileName();
+            }
+            else
+            {
+                //can't find map file in the current Dir, ask user
+                dlg_changeMap dialog(mapPath, this);
+                if (dialog.exec() == QDialog::Accepted)
+                {
+                    mapPath = dialog.getMapPath();
+                    mapTabName = QFileInfo(mapPath).baseName();
+                }
+                else
+                    mapPath = QString();//empty
+            }
         }
+
+        if ( !mapPath.isEmpty() )
+        {
+            loadBackgroundMap(mapPath);
+
+            if (!mapTabName.isEmpty())
+            {
+                ui->tabWidget->setTabText(0, mapTabName);
+                ui->tabWidget->setTabToolTip(0, mapPath);
+            }
+        }
+        else
+            //Load project without a background map
+            QMessageBox::warning(this,
+                                 currentProjectName,
+                                 tr("No background map selected!"),
+                                 QMessageBox::Ok);
+
 
         //Restore drawing color and drawing width
         drawingColor = settings.value("drawing/color").value<QColor>();
@@ -464,7 +505,7 @@ void Gribouillot::openProject(QString gribFile)
         settings.endGroup();
 
 
-        //Restore layers from XML files located in the same folder
+        //Restore layers from XML files located in current project folder
         settings.beginGroup("layersOrder");
             layersList = settings.allKeys();
             foreach (QString layerKey, layersList)
@@ -551,7 +592,6 @@ void Gribouillot::addNewLayer(QString path)
 /**
  * @brief   Save the order of the layers after a layer deletion.
  * @detail  A deleted layer has its corresponding file definitively removed from disk.
- *          Also the layers settings can be updated without user's confirmation.
  */
 void Gribouillot::saveLayersOrder()
 {
@@ -575,7 +615,7 @@ void Gribouillot::saveLayersOrder()
 /**
  * @brief   Pop-up a dialog to create a new Grib project
  * @details A grib project is a directory containing:
- *          - a grib config file with map path, scales, etc
+ *          - a grib config file (.grib) with map path, scales, etc
  *          - the layers grib files
  */
 void Gribouillot::on_actionNewProject_triggered()
@@ -600,7 +640,7 @@ void Gribouillot::on_actionNewProject_triggered()
             {
                 QFileInfo mapFileInfo(mapPath);
                 QString newPath = newProjectPath +"/"+ mapFileInfo.fileName();
-                QFile::copy(mapPath, newPath);
+                QFile::copy(mapPath, newPath);//wont overwrite if already there
                 mapPath = newPath;
             }
 

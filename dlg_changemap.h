@@ -1,3 +1,12 @@
+/**
+ *  @brief
+ *  @details
+ *  @author    Ludovic A.
+ *  @date      2015 /2016/2017/2018
+ *  @bug       No known bugs
+ *  @copyright GNU Public License v3
+ */
+
 #ifndef DLG_CHANGEMAP_H
 #define DLG_CHANGEMAP_H
 
@@ -12,8 +21,13 @@ class dlg_changeMap : public QDialog
     Q_OBJECT
 
 public:
-    explicit dlg_changeMap(QWidget *parent = 0);
+    explicit dlg_changeMap(QString mapName, QWidget *parent = 0);
     ~dlg_changeMap();
+
+    QString getMapPath();
+
+private slots:
+    void on_mapFileBtt_clicked();
 
 private:
     Ui::dlg_changeMap *ui;
