@@ -192,6 +192,31 @@ void Gribouillot::fullToolbar()
 
 
 /**
+ * @brief   Enable all items (from all layers) and the specifics of the items
+ *          which belong to the given 'layer'.
+ */
+void Gribouillot::enableItemsAndSpecifics(GribouillotLayer* layer)
+{
+    bool specifics;
+
+    foreach(QGraphicsItem* item, scene->items())
+    {
+        specifics = layer->contains(item) ? true : false;
+
+        //enable item
+        item->setEnabled(true);
+
+        //enable or not specifics
+        if( item->type() == PIXMAP )
+            item->setFlag(QGraphicsItem::ItemIsMovable, specifics);
+        if ( item->type() == SPIRAL)
+            item->setEnabled(specifics);
+        //to complete if necessary
+    }
+}
+
+
+/**
  * @brief Set the icon showing the drawing color
  */
 void Gribouillot::setColorIcon(QColor color)
@@ -1080,14 +1105,6 @@ void Gribouillot::tabPageChanged(int newTabIndex)
 {
     //qDebug() << "In tabPageChanged with newTabIndex: " << newTabIndex;
 
-    /*
-     * Disable items from all layers. A bit overkill but suppress possible side-
-     * effects of using currentTabIndex at this point. See saveProject for an
-     * explanation of the loop parameters.
-     */
-    for (int i = 1; i < (ui->tabWidget->count()-1); ++i)
-        ( dynamic_cast<GribouillotLayer *>(ui->tabWidget->widget(i)) )->disableItems();
-
     //Disengage points weights display
     ui->actionPointWeight->setChecked(false);
 
@@ -1095,14 +1112,22 @@ void Gribouillot::tabPageChanged(int newTabIndex)
     {
         case 0:
             //mapTab is displayed
+
+            /* disable items */
+            foreach( QGraphicsItem* item, scene->items())
+                item->setEnabled(false);
+
             restrictToolbar();
             break;
 
         default:
             //A layer is displayed
-            fullToolbar();
+
+            /* enable items and specifics for the current layer */
             currentLayer = dynamic_cast<GribouillotLayer *>(ui->tabWidget->currentWidget());
-            currentLayer->enableItems();
+            enableItemsAndSpecifics(currentLayer);
+
+            fullToolbar();
     }
 
     /**

@@ -141,17 +141,16 @@ void GribouillotLayer::addItemToLayer(QGraphicsItem *item)
 
 
 /**
- * @brief   Enable items  of this layer.
- * @details Items become selectable etc. If onlyTypes is empty,
+ * @brief   Enable items  of this layer of types "onlyTypes".
+ * @details Items become fully enabled. If onlyTypes is empty,
  *          enable all items (default behavior).
  */
 void GribouillotLayer::enableItems(QList<GribouillotItem> onlyTypes)
 {
     foreach(QGraphicsItem* item, itemsList)
     {
-        if(onlyTypes.isEmpty())//default
-            item->setEnabled(true);
-        else if(onlyTypes.contains((GribouillotItem)item->type()))
+        if(onlyTypes.isEmpty()
+           || onlyTypes.contains((GribouillotItem)item->type()))
             item->setEnabled(true);
         else
             item->setEnabled(false);
@@ -159,18 +158,30 @@ void GribouillotLayer::enableItems(QList<GribouillotItem> onlyTypes)
 }
 
 
+/**
+ * @brief   return true if 'item' belongs to current layer.
+ */
+bool GribouillotLayer::contains(QGraphicsItem *item)
+{
+    return itemsList.contains(item);
+}
 
 
 /**
- * @brief   Disable all items of this layer
- * @details Items can not be selected, modified.
+ * @brief   return the selected items of the layer
+ * @return
  */
-void GribouillotLayer::disableItems()
+QList<QGraphicsItem *> GribouillotLayer::selectedItems()
 {
-    foreach( QGraphicsItem* item, itemsList)
+    QList<QGraphicsItem*> selected;
+    foreach(QGraphicsItem* item, itemsList)
     {
-        item->setEnabled(false);
+        if (item->isSelected())
+                selected << item;
+
     }
+
+    return selected;
 }
 
 
@@ -405,6 +416,7 @@ int GribouillotLayer::deleteSelectedItems()
     {
         if (item->isSelected())
         {
+            item->scene()->removeItem(item);
             itemsList.removeOne(item);
             delete item;
             deletedItems++;

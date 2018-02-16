@@ -16,12 +16,15 @@
 #include <QColor>
 #include <QWidget>
 
+
 class GribouillotScene : public QGraphicsScene
 {
     Q_OBJECT
 public:
     explicit GribouillotScene(QObject *parent = nullptr);
     ~GribouillotScene(){}
+
+    void disableItemsSpecifics();
 
 signals:
     void newMouseClickPreSelect(QPointF);

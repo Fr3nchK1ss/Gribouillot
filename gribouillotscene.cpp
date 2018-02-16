@@ -12,12 +12,35 @@
 #include <QGraphicsView>
 #include <QPen>
 
+#include "gribouillotitem.h"
 #include "gribouillotscene.h"
 
 GribouillotScene::GribouillotScene(QObject *parent) :
     QGraphicsScene(parent)
 {
 }
+
+
+
+/**
+ * @brief   Disable the specifics for all items of the scene.
+ * @details When working in a layer, only the items of this layer
+ *          can use "specifics". Other items have their "specifics"
+ *          disabled.
+ */
+void GribouillotScene::disableItemsSpecifics()
+{
+    foreach( QGraphicsItem* item, items())
+    {
+        if( item->type() == PIXMAP )
+            item->setFlag(QGraphicsItem::ItemIsMovable, false);
+        if ( item->type() == SPIRAL)
+            item->setEnabled(false);
+        //to complete if necessary
+    }
+}
+
+
 
 /********************* protected overloaded mouseEvents **********************/
 /**
@@ -57,17 +80,15 @@ void GribouillotScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 /**
  * @brief   React to keyboard input targeting scene items
  * @details Delete: delete one or many items
- *          Tab:    select next item
+ *          Space:    select next item
+ *          c:        change the color of selected items
+ *          t:        change the thickness of selected items
  */
 void GribouillotScene::keyPressEvent(QKeyEvent *e)
 {
     switch ( e->key() )
     {
         case Qt::Key_Delete:
-            //remove items from scene
-            foreach(QGraphicsItem* item, selectedItems())
-                removeItem(item);
-
             //send a signal to remove items from the layer->itemslist
             emit keyDeletePressed();
             break;

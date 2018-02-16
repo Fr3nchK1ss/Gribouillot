@@ -46,7 +46,8 @@ public:
     QString askNewFile();
 
     void enableItems(QList<GribouillotItem> onlyTypes = QList<GribouillotItem>());
-    void disableItems();
+    bool contains(QGraphicsItem* item);
+    QList<QGraphicsItem*> selectedItems();
     bool writeXML();
     void loadXML(QString path);
 

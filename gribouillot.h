@@ -81,6 +81,7 @@ private:
     void createPlusTab();
     void restrictToolbar();
     void fullToolbar();
+    void enableItemsAndSpecifics(GribouillotLayer* layer);
     void setColorIcon(QColor color);
     void clearView();
     void setDrawingView();

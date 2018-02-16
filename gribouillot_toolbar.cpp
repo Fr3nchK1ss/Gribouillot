@@ -654,9 +654,10 @@ void Gribouillot::on_actionCursorSelect_triggered()
 {
     currentDrawing = NONE;
     statusBar()->clearMessage();
-    //Items may have been disabled by drawing functions
-    if(currentLayer != nullptr)
-        currentLayer->enableItems();
+
+    //Items can be selected
+    if (currentLayer != nullptr)
+        enableItemsAndSpecifics(currentLayer);
 
     setCursor(Qt::ArrowCursor);
     ui->zGraphicsView->setCursor(Qt::ArrowCursor);//necessary
@@ -672,12 +673,14 @@ void Gribouillot::on_actionCursorDrag_triggered()
 {
     currentDrawing = NONE;
     statusBar()->clearMessage();
-    //Items cant be selected in Drag mode
-    if(currentLayer != nullptr)
-        currentLayer->disableItems();
+
+    //Items can not be selected in Drag mode
+    foreach(QGraphicsItem* item, scene->items())
+        item->setEnabled(false);
 
     setCursor(Qt::OpenHandCursor);
     ui->zGraphicsView->setDragMode(QGraphicsView::ScrollHandDrag);
+
 }
 
 
@@ -688,7 +691,9 @@ void Gribouillot::on_actionCursorDrag_triggered()
  */
 void Gribouillot::on_actionChooseColor_triggered()
 {
-    if(!scene->selectedItems().isEmpty())
+    //if at least one item from the current layer is selected, change color of selected items.
+
+    if(!currentLayer->selectedItems().isEmpty())
     {
         const QColor color = QColorDialog::getColor(drawingColor,
                                                     this,
@@ -696,7 +701,7 @@ void Gribouillot::on_actionChooseColor_triggered()
                                                     QColorDialog::DontUseNativeDialog);
         if (color.isValid())
         {
-            foreach(QGraphicsItem* item, scene->selectedItems())
+            foreach(QGraphicsItem* item, currentLayer->selectedItems())
             {
                 if(item->type() == POINT_W )
                 {
@@ -722,6 +727,7 @@ void Gribouillot::on_actionChooseColor_triggered()
              }
         }
     }
+    //else change the color of the drawing tool.
     else
     {
         const QColor color = QColorDialog::getColor(drawingColor,
@@ -755,7 +761,7 @@ void Gribouillot::on_actionChooseWidth_triggered()
 
 void Gribouillot::keyTFromScene()
 {
-    if(!scene->selectedItems().isEmpty())
+    if(!currentLayer->selectedItems().isEmpty())
     {
         Dlg_penThickness dialog("Change the width of selected items.", drawingWidth);
 
@@ -763,7 +769,7 @@ void Gribouillot::keyTFromScene()
         {
              int width = dialog.getThicknessValue();//Between 1 and 30
 
-             foreach(QGraphicsItem* item, scene->selectedItems())
+             foreach(QGraphicsItem* item, currentLayer->selectedItems())
              {
                  if(item->type() == POINT_W )
                  {
