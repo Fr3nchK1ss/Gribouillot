@@ -32,7 +32,7 @@ public:
 
     void newPen(QColor penColor, int penWidth);
     static QRectF computeArcRect(int sideNumber, QVector<QLineF> side);
-    static void computeArcAngles(QLineF side1, QLineF side2,
+    static void computeArcAngles(QLineF sideA, QLineF sideB,
                                  qreal &startAngle, qreal &spanAngle);
     void serialize2xml(QXmlStreamWriter* w);
     QString status(qreal scale);

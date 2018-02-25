@@ -122,27 +122,27 @@ QRectF Item_spiral::computeArcRect(int sideNumber, QVector<QLineF> side)
 
 
 /**
- * @brief Compute the startAngle and spanAngle of the arc in-between side1
- *        and side2.
+ * @brief Compute the startAngle and spanAngle of the arc in-between sideA
+ *        and sideB.
  */
-void Item_spiral::computeArcAngles(QLineF side1, QLineF side2,
+void Item_spiral::computeArcAngles(QLineF sideA, QLineF sideB,
                                    qreal &startAngle, qreal &spanAngle)
 {
 
-    if(!side1.isNull() && !side2.isNull())
+    if(!sideA.isNull() && !sideB.isNull())
     {
         //qDebug() << "angles for side: " << side1;
 
-        QLineF horizontal(side1.p1(), side1.p1()+QPointF(1,0));
-        QLineF flip(side1.p2(), side1.p1());
+        QLineF horizontal(sideA.p1(), sideA.p1()+QPointF(1,0));
+        QLineF flip(sideA.p2(), sideA.p1());
 
         startAngle = horizontal.angleTo(flip);
         //qDebug() << "start: " << startAngle;
 
-        spanAngle = side1.angleTo(side2);//counter-clockwise is Qt default
+        spanAngle = sideA.angleTo(sideB);//counter-clockwise is Qt default
         if(spanAngle > 180)
             //the spiral goes clockwise
-            spanAngle = flip.angleTo(side2) - 180;
+            spanAngle = flip.angleTo(sideB) - 180;
         //qDebug() << "span: " << spanAngle;
     }
 }

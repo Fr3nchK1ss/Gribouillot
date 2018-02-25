@@ -849,7 +849,7 @@ void GribouillotLayer::drawCircle(QColor penColor, int penWidth, QPointF center,
 /**
  * @brief   draw a circle from a selected segment taken as radius and the position of the center.
  * @details the position of the center is defined by a user click on one side of the segment.
- * \return  the position of the center in scene coordinates
+ * @return  the position of the center in scene coordinates
  */
 QPointF GribouillotLayer::drawCircleFromRadius(QColor penColor, int penWidth, QPointF position)
 {
@@ -872,7 +872,7 @@ QPointF GribouillotLayer::drawCircleFromRadius(QColor penColor, int penWidth, QP
 
 /**
  * @brief   draw a circle from its center and a point on its outline
- * \return  the position of the center in scene coordinates
+ * @return  the position of the center in scene coordinates
  */
 QPointF GribouillotLayer::drawCircleFromRadius(QColor penColor, int penWidth, QVector<QPointF> positions)
 {
@@ -893,7 +893,7 @@ QPointF GribouillotLayer::drawCircleFromRadius(QColor penColor, int penWidth, QV
 
 /**
  * @brief   draw a circle from its center and the radius given by user (opens a dialog)
- * \return  the position of the center in scene coordinates
+ * @return  the position of the center in scene coordinates
  */
 QPointF GribouillotLayer::drawCircleFromRadius(QColor penColor, int penWidth, QPointF center,
                                              qreal scale)

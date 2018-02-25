@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>935</width>
+    <width>999</width>
     <height>600</height>
    </rect>
   </property>
@@ -63,7 +63,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>935</width>
+     <width>999</width>
      <height>22</height>
     </rect>
    </property>
@@ -133,7 +133,9 @@
    <addaction name="separator"/>
    <addaction name="actionDrawCenter"/>
    <addaction name="actionCircleCenterPoint"/>
-   <addaction name="actionCircleCenterRadius"/>
+   <addaction name="actionCircleRadius"/>
+   <addaction name="actionCircleCenterRadiusValue"/>
+   <addaction name="actionCirclePointsDiameter"/>
    <addaction name="actionCircleDiameter"/>
    <addaction name="actionCircleTriangle"/>
    <addaction name="separator"/>
@@ -254,39 +256,39 @@
     <string>circleCenterPoint</string>
    </property>
    <property name="toolTip">
-    <string>Draw a circle given a radius defined by 2 points OR a selected segment</string>
+    <string>Draw a circle given a center and an other point</string>
    </property>
   </action>
-  <action name="actionCircleCenterRadius">
+  <action name="actionCircleCenterRadiusValue">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
-     <normalon>:/Resources/Icons/circle-center-radius.png</normalon>
-    </iconset>
+    <iconset resource="gribouillot.qrc">
+     <normaloff>:/Resources/Icons/circle-radius-value.png</normaloff>
+     <normalon>:/Resources/Icons/circle-center-radius.png</normalon>:/Resources/Icons/circle-radius-value.png</iconset>
    </property>
    <property name="text">
-    <string>circleCenterRadius</string>
+    <string>circleCenterRadiusValue</string>
    </property>
    <property name="toolTip">
-    <string>Draw a circle given its center and radius value</string>
+    <string>Draw a circle given a center and a radius value</string>
    </property>
   </action>
-  <action name="actionCircleDiameter">
+  <action name="actionCirclePointsDiameter">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
-     <normalon>:/Resources/Icons/circle-diameter.png</normalon>
-    </iconset>
+    <iconset resource="gribouillot.qrc">
+     <normaloff>:/Resources/Icons/circle-2points-diameter.png</normaloff>
+     <normalon>:/Resources/Icons/circle-diameter.png</normalon>:/Resources/Icons/circle-2points-diameter.png</iconset>
    </property>
    <property name="text">
-    <string>circleDiameter</string>
+    <string>circlePointsDiameter</string>
    </property>
    <property name="toolTip">
-    <string>Draw a circle given a diameter defined by 2 points OR a selected segment</string>
+    <string>Draw a circle given 2 points as a diameter</string>
    </property>
   </action>
   <action name="actionCircleTriangle">
@@ -544,7 +546,7 @@
     <string>Select items from the view {s}</string>
    </property>
    <property name="shortcut">
-    <string>X</string>
+    <string>J</string>
    </property>
   </action>
   <action name="actionImport_layer">
@@ -627,6 +629,38 @@
     <string>Draw a 4 centers spiral</string>
    </property>
   </action>
+  <action name="actionCircleRadius">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="gribouillot.qrc">
+     <normaloff>:/Resources/Icons/circle-segment.png</normaloff>
+     <normalon>:/Resources/Icons/circle-center-radius.png</normalon>:/Resources/Icons/circle-segment.png</iconset>
+   </property>
+   <property name="text">
+    <string>circleRadius</string>
+   </property>
+   <property name="toolTip">
+    <string>Draw a circle with the selected segment as radius</string>
+   </property>
+  </action>
+  <action name="actionCircleDiameter">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="gribouillot.qrc">
+     <normaloff>:/Resources/Icons/circle-diameter.png</normaloff>
+     <normalon>:/Resources/Icons/circle-center-radius.png</normalon>:/Resources/Icons/circle-diameter.png</iconset>
+   </property>
+   <property name="text">
+    <string>circleDiameter</string>
+   </property>
+   <property name="toolTip">
+    <string>Draw a circle with the selected segment as diameter</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -684,8 +718,8 @@
    <slot>saveProject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>467</x>
-     <y>41</y>
+     <x>-1</x>
+     <y>-1</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>

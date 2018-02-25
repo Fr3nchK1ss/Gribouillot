@@ -8,7 +8,6 @@
         <file>Resources/Icons/measure-tape-km.png</file>
         <file>Resources/Icons/measure-tape-px.png</file>
         <file>Resources/Icons/add-layer.svg</file>
-        <file>Resources/Icons/circle-center-radius.png</file>
         <file>Resources/Icons/color-wheel.png</file>
         <file>Resources/Icons/line.png</file>
         <file>Resources/Icons/line-angle.png</file>
@@ -38,5 +37,8 @@
         <file>Resources/Icons/circle-drawCenter.png</file>
         <file>Resources/Icons/arc-2boundaries.png</file>
         <file>Resources/Icons/spiral.png</file>
+        <file>Resources/Icons/circle-radius-value.png</file>
+        <file>Resources/Icons/circle-segment.png</file>
+        <file>Resources/Icons/circle-2points-diameter.png</file>
     </qresource>
 </RCC>

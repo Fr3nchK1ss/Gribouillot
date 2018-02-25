@@ -137,27 +137,31 @@ private slots:
 
 /*************** In gribouillot_toolbar.cpp **************/
     //React to scene events
-    void sceneSelectionChanged() const;
+    void newMoveOnScene(QPointF position);
     void newSceneClickPreSelect(QPointF position);
     void newSceneClickPostSelect(QPointF position);
     bool moreCoordsNeeded(QPointF position);
     bool moreDrawingTips();
     bool isOnlySelected(QVector<GribouillotItem> types,
                          int targetCount = -1);
+    QPointF adjustClickToPoint(QPointF pos);
+
+    void keyDeleteFromScene();
+    void keySpaceFromScene();
+    void keyTFromScene();
+
+    void sceneSelectionChanged() const;
+
     void visualHelp_arcFromCircle();
     void visualHelp_pointOnRail();
     void visualHelp_lineFromAngle(Item_pointOnRail* pOR);
-
-    void newMoveOnScene(QPointF position);
-    void keyDeleteFromScene();
-    void keySpaceFromScene();
 
     //Toolbars actions (linked to scene events)
     void on_actionCursorDrag_triggered();
     void on_actionCursorSelect_triggered();
     void on_actionChooseColor_triggered();
     void on_actionChooseWidth_triggered();
-    void keyTFromScene();
+
     void on_actionMeasureDistance_toggled(bool isChecked);
     void measureDistance(qreal distance);
 
@@ -174,7 +178,9 @@ private slots:
     void on_actionAngleLine_triggered();
 
     void on_actionCircleCenterPoint_triggered();
-    void on_actionCircleCenterRadius_triggered();
+    void on_actionCircleCenterRadiusValue_triggered();
+    void on_actionCircleRadius_triggered();
+    void on_actionCirclePointsDiameter_triggered();
     void on_actionCircleDiameter_triggered();
     void on_actionCircleTriangle_triggered();
 
@@ -185,7 +191,6 @@ private slots:
     void finalizeSpiral(QString errorMsg);
 
     void on_actionLoadPicture_triggered();
-
 };
 
 #endif // GRIBOUILLOT_H

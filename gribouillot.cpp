@@ -91,7 +91,9 @@ Gribouillot::Gribouillot(QWidget *parent) :
     drawingGroup->addAction(ui->actionCursorSelect);
     drawingGroup->addAction(ui->actionMeasureDistance);
     drawingGroup->addAction(ui->actionMeasureAngle);
+
     drawingGroup->addAction(ui->actionPoint);
+
     drawingGroup->addAction(ui->actionSegment);
     drawingGroup->addAction(ui->actionLine);
     drawingGroup->addAction(ui->actionHorizontalLine);
@@ -100,13 +102,19 @@ Gribouillot::Gribouillot(QWidget *parent) :
     drawingGroup->addAction(ui->actionPerpendicular);
     drawingGroup->addAction(ui->actionBisection);
     drawingGroup->addAction(ui->actionAngleLine);
+
     drawingGroup->addAction(ui->actionCircleCenterPoint);
-    drawingGroup->addAction(ui->actionCircleCenterRadius);
+    drawingGroup->addAction(ui->actionCircleRadius);
+    drawingGroup->addAction(ui->actionCircleCenterRadiusValue);
+    drawingGroup->addAction(ui->actionCirclePointsDiameter);
     drawingGroup->addAction(ui->actionCircleDiameter);
     drawingGroup->addAction(ui->actionCircleTriangle);
+
     drawingGroup->addAction(ui->actionArcFromCircle);
     drawingGroup->addAction(ui->actionArc);
+
     drawingGroup->addAction(ui->actionSpiral);
+
     drawingGroup->addAction(ui->actionLoadPicture);
 
     //connect because mapTabWidget toolButtons can not be a part of the QActionGroup above
@@ -251,6 +259,8 @@ void Gribouillot::clearView()
 
         drawingCoords.clear();//vector to store drawing positions
     }
+
+    //scene->clearSelection();
 }
 
 
@@ -1187,5 +1197,4 @@ void Gribouillot::doAddItemToScene(QGraphicsItem* item)
 {
     scene->addItem(item);
 }
-
 

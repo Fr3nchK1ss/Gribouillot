@@ -38,8 +38,9 @@ Item_spiralDrawer::Item_spiralDrawer(int penWidth, QColor c, QPointF center,
 /**
  * @brief   Compute the base quadrangle out of user's clicks.
  *          Auto-compute missing centers if necessary.
- * @return  true    if we have enough data to compute the spiral.
- *          false   otherwise.
+ * @return  The status of the drawing if some data is missing,
+ *          or a null String if we have enough data to compute
+ *          a spiral.
  */
 QString Item_spiralDrawer::computeSpiralBase()
 {
@@ -82,7 +83,7 @@ QString Item_spiralDrawer::computeSpiralBase()
         case 0:
             /*
              * IMPORTANT: Check that the four centers given by user yield
-             * a convex shape. The user's 4th click may be misplaced.
+             * a convex shape as the user's 4th click may be misplaced.
              */
             side[3] = QLineF(side[2].p2(), side[0].p1());
 
@@ -94,10 +95,12 @@ QString Item_spiralDrawer::computeSpiralBase()
                                  side[2].angleTo(side[3]) > 180 ||
                                  side[3].angleTo(side[0]) > 180) ))
             {
-                return QString(tr("Base not convex, can not draw spiral!"));
+                return QString(tr("The given base is not convex, Gribouillot can not draw a spiral!"));
             }
             else
+            {
                 return QString();
+            }
 
         default:
             return QString(tr("The spiral drawing needs at least 2 clicks!"));
@@ -155,7 +158,7 @@ QVector<QPointF> Item_spiralDrawer::getCenters()
 
 
 /**
- * @brief   Used by current layer to draw the quadrangle.
+ * @brief   Used by layer to draw the base quadrangle.
  * @return  The quadrangle base as 4 QLineF.
  */
 QVector<QLineF> Item_spiralDrawer::getBase()
@@ -205,7 +208,7 @@ void Item_spiralDrawer::paint(QPainter *painter, const QStyleOptionGraphicsItem 
 
         /*
         painter->setPen(Qt::blue);
-        painter->drawRect(Item_spiral::computeArcRect(0));
+        painter->drawRect(Item_spiral::computeArcRect(0, side));
         painter->setPen(pen());
         */
     }
@@ -232,11 +235,13 @@ void Item_spiralDrawer::paint(QPainter *painter, const QStyleOptionGraphicsItem 
         QRectF arcRect0 = Item_spiral::computeArcRect(0, side);
         arcRect0.translate(p1);//p1 == side[0].p2
         painter->drawArc( arcRect0, arcHintAngle*16, clockwiseHint*30*16);
+
         /*
         painter->setPen(Qt::blue);
-        painter->drawRect(Item_spiral::computeArcRect(1));
+        painter->drawRect(arcRect0);
         painter->setPen(pen());
         */
+
     }
 
     if(!side[2].isNull())
@@ -320,6 +325,10 @@ void Item_spiralDrawer::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Enter:
         case Qt::Key_Return:
             emit endDrawing(computeSpiralBase());
+            break;
+
+        case Qt::Key_Escape:
+            emit endDrawing(QString(tr("aborted")));
             break;
 
         default:
