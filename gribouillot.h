@@ -178,10 +178,10 @@ private slots:
     void on_actionAngleLine_triggered();
 
     void on_actionCircleCenterPoint_triggered();
-    void on_actionCircleCenterRadiusValue_triggered();
-    void on_actionCircleRadius_triggered();
-    void on_actionCirclePointsDiameter_triggered();
+    void on_actionCircleRadiusValue_triggered();
+    void on_actionCircleSelectRadius_triggered();
     void on_actionCircleDiameter_triggered();
+    void on_actionCircleSelectDiameter_triggered();
     void on_actionCircleTriangle_triggered();
 
     void on_actionArcFromCircle_triggered();

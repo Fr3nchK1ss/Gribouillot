@@ -104,10 +104,10 @@ Gribouillot::Gribouillot(QWidget *parent) :
     drawingGroup->addAction(ui->actionAngleLine);
 
     drawingGroup->addAction(ui->actionCircleCenterPoint);
-    drawingGroup->addAction(ui->actionCircleRadius);
-    drawingGroup->addAction(ui->actionCircleCenterRadiusValue);
-    drawingGroup->addAction(ui->actionCirclePointsDiameter);
+    drawingGroup->addAction(ui->actionCircleSelectRadius);
+    drawingGroup->addAction(ui->actionCircleRadiusValue);
     drawingGroup->addAction(ui->actionCircleDiameter);
+    drawingGroup->addAction(ui->actionCircleSelectDiameter);
     drawingGroup->addAction(ui->actionCircleTriangle);
 
     drawingGroup->addAction(ui->actionArcFromCircle);

@@ -28,10 +28,10 @@ enum GribouillotItem {
 
                       CIRCLE = QGraphicsItem::UserType + 20,
                       CIRCLE_FROMCENTERPOINT = QGraphicsItem::UserType + 21,
-                      CIRCLE_FROMRADIUS = QGraphicsItem::UserType + 22,
+                      CIRCLE_FROMSELECTEDRADIUS = QGraphicsItem::UserType + 22,
                       CIRCLE_FROMRADIUSVALUE = QGraphicsItem::UserType + 23,
-                      CIRCLE_FROM2WAYPOINTS = QGraphicsItem::UserType + 24,
-                      CIRCLE_FROMDIAMETER = QGraphicsItem::UserType + 25,
+                      CIRCLE_FROMDIAMETER = QGraphicsItem::UserType + 24,
+                      CIRCLE_FROMSELECTEDDIAMETER = QGraphicsItem::UserType + 25,
                       CIRCLE_FROMTRIANGLE = QGraphicsItem::UserType + 26,
 
                       ARC = QGraphicsItem::UserType + 30,
