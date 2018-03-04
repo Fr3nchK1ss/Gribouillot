@@ -59,7 +59,10 @@ void GribouillotScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
     if (views().at(0)->dragMode() == QGraphicsView::ScrollHandDrag)
         event->ignore();
     else
-        //Default behavior (select item below cursor)
+        /*
+         * Default behavior (select item below cursor)
+         * IMPORTANT: also forwards the event to mouse grabbing item.
+         */
         QGraphicsScene::mousePressEvent(event);
 
     emit newMouseClickPostSelect(event->scenePos());

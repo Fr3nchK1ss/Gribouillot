@@ -46,13 +46,15 @@ void Gribouillot::newSceneClickPreSelect(QPointF position)
     QPointF noCenter(-10000, -10000);
     QPointF center = noCenter;
 
+    //Some visual helps are 'self-drawing' items catching the mouse
+    QGraphicsItem* mG = scene->mouseGrabberItem();
+
     switch (currentDrawing)
     {
         case POINT_W :
             currentLayer->drawPoint(drawingColor, drawingWidth, position,
                                     ui->actionPointWeight->isChecked());
             break;
-
 
         case PARALLEL:
             if( isOnlySelected({SEGMENT, LINE}, 1) )
@@ -79,6 +81,58 @@ void Gribouillot::newSceneClickPreSelect(QPointF position)
 
                 on_actionCircleSelectRadius_triggered();
             }
+            break;
+
+        case ARC:
+            if (!moreCoordsNeeded(position))
+            {
+                Item_arcDrawer* aD = qgraphicsitem_cast<Item_arcDrawer*>(mG);
+                currentLayer->drawArc(drawingColor, drawingWidth, aD->getArc());
+                /*
+                 * Reset drawing. Helper item, which is the non-null mouseGrabber at
+                 * this point, will be deleted soon by a call to setDrawingView().
+                 */
+                on_actionArc_triggered();
+
+            }
+            else if( drawingCoords.size() == 2)
+            {//that would be 2 coords out of 3 needed in total
+
+                if( drawingCoords[0] != drawingCoords[1])
+                {
+                    //Show a visual help to draw the arc
+                    Item_arcDrawer* helper = new Item_arcDrawer(drawingWidth,
+                                                                drawingColor,
+                                                                drawingCoords[0],
+                                                                drawingCoords[1]);
+                    scene->addItem(helper);
+                    helper->grabMouse();//Grab mouse in order to self-draw (respond to MousePressEvent)
+                }
+                else
+                    ui->statusBar->showMessage("Angle center and start points can not be the same!");
+            }
+            break;
+
+        case SPIRAL:
+            if (mG == nullptr)
+            {
+                //Show a visual help to draw the spiral
+                Item_spiralDrawer* helper = new Item_spiralDrawer(drawingWidth,
+                                                                  drawingColor);
+                /*
+                 * Unlike other figures, a spiral can be drawn with a variable number of
+                 * clicks. Also the drawing ends directly by a signal from the helper,
+                 * when the user presses [Enter] or reaches the maximum number of 4 clicks.
+                 */
+                connect(helper, &Item_spiralDrawer::endDrawing, this, &Gribouillot::finalizeSpiral);
+
+                scene->addItem(helper);
+                scene->setFocusItem(helper);//Focus is needed to catch [Enter] key
+                //Grab mouse in order to self-draw (respond to mouseMove)
+                helper->grabMouse();
+
+            }
+            moreDrawingTips();//move to next tip
             break;
 
         case NONE:
@@ -274,61 +328,6 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
             //else wait for user to pick a circle OR for more Coordinates
             break;
 
-        case ARC:
-            if ( mG != nullptr && mG->type() == ARC_DRAWER)
-            {//this LAST click indicates the end of the arc drawing.
-
-                Item_arcDrawer* aD = qgraphicsitem_cast<Item_arcDrawer*>(mG);
-                currentLayer->drawArc(drawingColor, drawingWidth, aD->getArc());
-                /*
-                 * Reset drawing. Helper item, which is the non-null mouseGrabber at
-                 * this point, will be deleted soon by a call to setDrawingView().
-                 */
-                on_actionArc_triggered();
-            }
-            else if (!moreCoordsNeeded(adjustClickToPoint(position)))
-            {
-                if(drawingCoords[0] != drawingCoords[1])
-                {
-                    //Show a visual help to draw the arc from the circle
-                    Item_arcDrawer* helper = new Item_arcDrawer(drawingWidth,
-                                                                drawingColor,
-                                                                drawingCoords[0],
-                                                                drawingCoords[1]);
-                    //The scene, not the current layer, must take care of this helper
-                    scene->addItem(helper);
-                    //Grab mouse in order to self-draw (respond to mouseMove)
-                    helper->grabMouse();
-                }
-                else
-                    ui->statusBar->showMessage("Same position selected twice!");
-            }
-            break;
-
-        case SPIRAL:
-            if (mG == nullptr)
-            {
-                //Show a visual help to draw the spiral
-                Item_spiralDrawer* helper = new Item_spiralDrawer(drawingWidth,
-                                                                  drawingColor,
-                                                                  adjustClickToPoint(position));
-                /*
-                 * Unlike other figures, a spiral can be drawn with a variable number of
-                 * clicks. Also the drawing ends directly by a signal from the helper,
-                 * when the user presses [Enter] or reaches the maximum number of 4 clicks.
-                 */
-                connect(helper, &Item_spiralDrawer::endDrawing, this, &Gribouillot::finalizeSpiral);
-
-                scene->addItem(helper);
-                scene->setFocusItem(helper);//Focus is needed to catch [Enter] key
-                helper->grabMouse();
-
-            }
-
-            moreDrawingTips();//move to next tip
-
-            break;
-
         case NONE:
         default:
             break;
@@ -358,8 +357,8 @@ bool Gribouillot::moreCoordsNeeded(QPointF position)
      * first call to this function in any case.
      */
     int tipIndex = drawingCoords.size() + 1;
-    qDebug() << "position: " << position;
-    qDebug() << tipIndex << drawingCoords.size() << drawingTips.size();
+    //qDebug() << "position: " << position;
+    //qDebug() << tipIndex << drawingCoords.size() << drawingTips.size();
 
     if( tipIndex < drawingTips.size() )
     {
@@ -1170,12 +1169,12 @@ void Gribouillot::on_actionArc_triggered()
     setDrawingView();
     currentDrawing = ARC;
     drawingTips = {tr("Arc: define the center of the arc."),
-                   tr("Arc: define the starting point of the arc.")};
+                   tr("Arc: define the starting point of the arc."),
+                   tr("Arc: define the angle of the arc.")};
 
     statusBar()->showMessage(drawingTips[0]);
 
 }
-
 
 /**
  * @brief   Draw a 4 centers spiral, according to chosen options
@@ -1184,8 +1183,8 @@ void Gribouillot::on_actionArc_triggered()
 void Gribouillot::on_actionSpiral_triggered()
 {
     setDrawingView();
+    scene->clearSelection();
     currentDrawing = SPIRAL;
-    currentLayer->enableItems({POINT_W});
     drawingTips = {tr("Spiral: define the first center."),
                    tr("Spiral: define the second center."),
                    tr("Spiral: define the third center."),

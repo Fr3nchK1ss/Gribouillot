@@ -55,11 +55,11 @@ private:
 
     QLineF firstVector;
     QLineF secondVector;
-    bool paintOnly1rstBoundary;
-    bool paintArc;
+    QPointF mouseMovePos;
+    bool paintArc = true;
     bool startClockwise = false;
 
-    Item_circle* savedCircle = nullptr;
+    Item_circle* sourceCircle = nullptr;
 
 };
 

@@ -15,10 +15,8 @@
 
 #include "item_spiraldrawer.h"
 
-Item_spiralDrawer::Item_spiralDrawer(int penWidth, QColor c, QPointF center,
-                                     QGraphicsItem *parent):
-    QAbstractGraphicsShapeItem(parent),
-    remainingClicks(4)
+Item_spiralDrawer::Item_spiralDrawer(int penWidth, QColor c, QGraphicsItem *parent):
+    QAbstractGraphicsShapeItem(parent)
 {
     setFlag(QGraphicsItem::ItemIsFocusable);
 
@@ -29,8 +27,9 @@ Item_spiralDrawer::Item_spiralDrawer(int penWidth, QColor c, QPointF center,
     pen.setStyle(Qt::DashLine);
     setPen(pen);
 
-    setPos(center);
     side.resize(4);
+    //4 clicks for 4 centers
+    remainingClicks = 4;
 
 }
 
@@ -262,8 +261,15 @@ void Item_spiralDrawer::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     remainingClicks--;
 
-    if(remainingClicks == 0)
+    if (remainingClicks == 3)
+    {
+        //The first clicks sets the first center
+        setPos(event->scenePos());
+    }
+    else if(remainingClicks == 0)
+    {
         emit endDrawing(computeSpiralBase());
+    }
 
     event->accept();
 

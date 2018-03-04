@@ -384,7 +384,6 @@ void Gribouillot::initGpsDialog()
  */
 void Gribouillot::maybeSave()
 {
-    /*DEV*/
     QMessageBox::StandardButton ret;
     ret = QMessageBox::warning(this,
                                tr("Confirm action"),

@@ -34,7 +34,7 @@ public:
         return SPIRAL_DRAWER;
     }
 
-    explicit Item_spiralDrawer(int penWidth, QColor c, QPointF center,
+    explicit Item_spiralDrawer(int penWidth, QColor c,
                                QGraphicsItem* parent = nullptr);
     ~Item_spiralDrawer(){}
 

@@ -19,7 +19,7 @@
 
 
 /**
- * @brief   This arcDrawer is a help to draw an arc from a circle
+ * @brief   This arcDrawer is a helper to draw an arc from a circle
  */
 Item_arcDrawer::Item_arcDrawer(Item_circle* circle) :
     QAbstractGraphicsShapeItem()
@@ -34,10 +34,8 @@ Item_arcDrawer::Item_arcDrawer(Item_circle* circle) :
     pen.setStyle(Qt::DashDotLine);
     setPen(pen);
 
-    savedCircle = circle;
+    sourceCircle = circle;//save source circle
 
-    paintOnly1rstBoundary = true;
-    paintArc = true;
     setPos(circle->scenePos());
     radius = circle->getRadius();
     startAngle = spanAngle = 0;
@@ -49,7 +47,7 @@ Item_arcDrawer::Item_arcDrawer(Item_circle* circle) :
 
 
 /**
- * @brief   This arcDrawer is a help to draw an arc from a center and a point
+ * @brief   This arcDrawer is a helper to draw an arc from a center and a point
  */
 Item_arcDrawer::Item_arcDrawer(int penWidth, QColor c, QPointF center, QPointF radiusPoint) :
     QAbstractGraphicsShapeItem()
@@ -61,8 +59,6 @@ Item_arcDrawer::Item_arcDrawer(int penWidth, QColor c, QPointF center, QPointF r
     pen.setStyle(Qt::DashLine);
     setPen(pen);
 
-    paintOnly1rstBoundary = false;
-    paintArc = true;
     setPos(center);
     firstVector = QLineF(center, radiusPoint);
     radius = firstVector.length();
@@ -78,7 +74,7 @@ Item_arcDrawer::Item_arcDrawer(int penWidth, QColor c, QPointF center, QPointF r
 
 
 /**
- * @brief   This arc drawer is a help to draw a line from another line, given an
+ * @brief   This arc drawer is a helper to draw a line from another line, given an
  *          angle.
  */
 Item_arcDrawer::Item_arcDrawer(int penWidth, QColor c, int windowSize,
@@ -92,7 +88,6 @@ Item_arcDrawer::Item_arcDrawer(int penWidth, QColor c, int windowSize,
     pen.setStyle(Qt::DotLine);
     setPen(pen);
 
-    paintOnly1rstBoundary = false;
     paintArc = false;
     setPos(center);
 
@@ -122,8 +117,6 @@ Item_arcDrawer::Item_arcDrawer(QPointF center, QSizeF picSize)
     pen.setStyle(Qt::DashLine);
     setPen(pen);
 
-    paintOnly1rstBoundary = false;
-    paintArc = true;
     setPos(center);
 
     qreal max= qMax(picSize.width(),picSize.height());
@@ -142,16 +135,15 @@ Item_arcDrawer::Item_arcDrawer(QPointF center, QSizeF picSize)
 
 
 /**
- * \return  the arc part of the arcDrawer as an Item_arc
+ * @return  the arc part of the arcDrawer as an Item_arc
  */
 Item_arc* Item_arcDrawer::getArc()
 {
     //qDebug() << "in getArc " << spanAngle;
     if (qAbs(spanAngle) < 0.5)
         return nullptr;//Arc too small == point
-
-    else
-        return new Item_arc(scenePos(),
+    //else
+    return new Item_arc(scenePos(),
                         QRectF(-radius, -radius, radius*2, radius*2),
                         startAngle, spanAngle);
 
@@ -159,7 +151,7 @@ Item_arc* Item_arcDrawer::getArc()
 
 
 /**
- * \return  the arc part of the arcDrawer as an Item_arc
+ * @return  the arc part of the arcDrawer as an Item_arc
  */
 QLineF Item_arcDrawer::getAngledLine()
 {
@@ -169,12 +161,12 @@ QLineF Item_arcDrawer::getAngledLine()
 
 
 /**
- * \return  the pointer to the circle from which the arc is extracted,
+ * @return  the pointer to the circle from which the arc is extracted,
  *          if any.
  */
 Item_circle* Item_arcDrawer::getSourceCircle()
 {
-    return savedCircle;//can be a nullptr
+    return sourceCircle;//can be a nullptr
 
 }
 
@@ -192,19 +184,20 @@ QRectF Item_arcDrawer::boundingRect() const
 
 /**
  * @brief   reimplement mousePressEvent for self-drawing
+ * @details function is unused except for cutting an arc from a circle
  */
 void Item_arcDrawer::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (paintOnly1rstBoundary)
+    if (firstVector.isNull())
     {
         QPointF center = scenePos();
+
+        //This click defines the firstVector
+        firstVector = QLineF(center, event->scenePos());
 
         //Compute the startAngle of this arc Drawer
         QLineF horizontalVector(center, center+QPointF(1,0));
         startAngle = horizontalVector.angleTo(firstVector);
-
-        //After the first click, paint the second boundary too
-        paintOnly1rstBoundary = false;
     }
 
     event->accept();
@@ -213,12 +206,13 @@ void Item_arcDrawer::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 /**
  * @brief   reimplement mouseMoveEvent for self-drawing
+ * @brief   continuously drawing secondVector for user's feedback
  */
 void Item_arcDrawer::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (paintOnly1rstBoundary)
+    if (firstVector.isNull())
     {
-        firstVector = QLineF(scenePos(), event->scenePos());
+        mouseMovePos = event->scenePos();//save for paint function
     }
     else
     {
@@ -248,7 +242,7 @@ void Item_arcDrawer::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 
 /**
- * @brief   implement virtual function paint() to draw the boundaries
+ * @brief   implement virtual function paint() to draw the boundaries of the arc and the unit label
  */
 void Item_arcDrawer::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
@@ -257,13 +251,20 @@ void Item_arcDrawer::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
 
     painter->setPen(pen());
 
-    firstVector.setLength(bRadius);
-    QLineF58 firstBoundary(0, 0, firstVector.dx(), firstVector.dy());
-    firstBoundary.setP1(firstBoundary.center());
+    //Draw first boundary of the angle
+    QLineF58 firstBoundary;
 
+    if(firstVector.isNull())
+        firstBoundary = QLineF58(QPointF(0,0), mapFromScene(mouseMovePos));
+    else
+        firstBoundary = QLineF58(0, 0, firstVector.dx(), firstVector.dy());
+
+    firstBoundary.setLength(bRadius);
+    firstBoundary.setP1(firstBoundary.center());//visual effect
     painter->drawLine(firstBoundary);
 
-    if(!paintOnly1rstBoundary)//Do draw 2nd boundary and angle label
+    //Draw 2nd boundary and the angle label showing the degrees
+    if(!secondVector.isNull())
     {
         secondVector.setLength(bRadius);
         QLineF58 secondBoundary(0, 0, secondVector.dx(), secondVector.dy());
