@@ -528,12 +528,14 @@ void Gribouillot::sceneSelectionChanged() const
     int selectedCount = selectedItems.size();
 
     if (currentDrawing == NONE)
-    {
+    {//Don't interfere with drawing tips
+
     if (selectedCount == 1 )
-    {/*
-      * When only one item is selected, display differents information
-      * about it like GPS coordinates.
-      */
+    {
+        /*
+        * When only one item is selected, display relevant information
+        * about it like GPS position, length, etc.
+        */
         QGraphicsItem* item = selectedItems.first();
 
         if( item->type() == POINT_W )
@@ -585,17 +587,16 @@ void Gribouillot::sceneSelectionChanged() const
     }
     else if (selectedCount > 1)
     {
-    /*
-     * When more than one item is selected, count items or display
-     * some other informations in special cases.
-     */
+        /*
+         * When more than one item is selected, count items or display
+         * some other informations in special cases.
+         */
         int points, circles, lines, arcs, pixmaps;
         points = circles = lines = arcs = pixmaps = 0;
 
         //Variables which may be needed
+        QList<Item_point*> pointsList;
         QList<Item_segment*> linesList;
-        qreal xSum, ySum;
-        xSum = ySum = 0;
 
         //Count points, lines, etc
         foreach(QGraphicsItem* item, selectedItems)
@@ -603,10 +604,7 @@ void Gribouillot::sceneSelectionChanged() const
             if( item->type() == POINT_W )
             {
                 //May be needed to calculate the center of several points:
-                Item_point* p = qgraphicsitem_cast<Item_point*>(item);
-                xSum += p->x();
-                ySum += p->y();
-
+                pointsList << qgraphicsitem_cast<Item_point*>(item);
                 ++points;
             }
             else if( item->type() == SEGMENT )
@@ -622,20 +620,7 @@ void Gribouillot::sceneSelectionChanged() const
             //else if( item->type() == CIRCLE )...
         }
 
-
-        /* Display specific informations related to counted items */
-
-        if ( gpsEnabled && points == selectedCount)
-        {//Only points are selected, calculate their center
-
-            QPointF center(xSum/(qreal)selectedCount, ySum/(qreal)selectedCount);
-
-            statusMsg = tr("Center of the ")+QString::number(selectedCount)
-                        +tr(" selected points: ")
-                        +gpsDialog->getFix(center);
-
-        }
-        else if ( lines == 2 && selectedCount == 2 )
+        if ( lines == 2 && selectedCount == 2 )
         {//Calculate the angle between the 2 lines and their intersection point.
 
             QPointF iPoint;

@@ -42,6 +42,10 @@ public:
     void newBrush(QColor brushColor, int penWidth);
     void serialize2xml(QXmlStreamWriter* w);
 
+protected:
+    QVariant itemChange(GraphicsItemChange change, const QVariant &value) Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
+
 private:
     QGraphicsProxyWidget* weightLabel;
 

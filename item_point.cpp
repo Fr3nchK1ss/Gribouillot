@@ -8,9 +8,11 @@
  */
 
 #include <QDebug>
+#include <QGraphicsView>
 #include <QLabel>
 #include <QPainter>
 
+#include "dlg_pointweight.h"
 #include "dlg_setupgps.h"
 #include "item_point.h"
 
@@ -24,6 +26,8 @@ Item_point::Item_point(QColor brushColor, qreal penWidth, QPointF position,
 {
     /* Point is "cosmetic" in its own way */
     setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    //Focusable: to respond to user's keyboard activity
+    setFlag(QGraphicsItem::ItemIsFocusable);
 
     //outline color
     setPen(QPen(Qt::black));
@@ -113,3 +117,48 @@ void Item_point::serialize2xml(QXmlStreamWriter* w)
 
 }
 
+
+/********************** Protected functions OVERRIDE *********************/
+/**
+ * @brief   Give keyboard focus to this item when it become selected.
+ * \warning SAME CODE as in other Gribouillot Item_. If you change this code
+ *          you probably need to change the code of other Item. Would need a mixin.
+ */
+QVariant Item_point::itemChange(GraphicsItemChange change, const QVariant &value)
+{
+    if (change == ItemSelectedHasChanged)
+    {
+        setFocus();
+        //qDebug() << "change in focus " << this;
+        return QVariant();//unused anyway
+    }
+    //Else, other changes
+    return QGraphicsItem::itemChange(change, value);
+
+}
+
+
+/**
+ * @brief   React to keyboard input. Change scale.
+ * @details The item needs to have focus to receive keyboard input,
+ *          see itemChange().
+ */
+void Item_point::keyPressEvent(QKeyEvent *event)
+{
+    switch ( event->key() )
+    {
+        case Qt::Key_W:
+            {
+                //static_cast blabla: to get the dialog centered in the view
+                Dlg_pointWeight dialog(static_cast<QWidget *>(this->scene()->views().at(0)) );
+                if (dialog.exec() == QDialog::Accepted)
+                    setWeight(dialog.getWeightValue());
+
+            }
+            break;
+
+        default:
+            QGraphicsItem::keyPressEvent(event);
+
+    }
+}
