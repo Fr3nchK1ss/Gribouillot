@@ -132,7 +132,7 @@ void Gribouillot::newSceneClickPreSelect(QPointF position)
                 helper->grabMouse();
 
             }
-            moreDrawingTips();//move to next tip
+            moreDrawingTips();//in any case move to next tip
             break;
 
         case NONE:
@@ -1195,7 +1195,7 @@ void Gribouillot::finalizeSpiral(QString errorMsg)
     {
         if(spiralDialog->isOneItem())
         {
-            currentLayer->drawSpiral(drawingColor, drawingWidth, aD->getSpiral());
+            currentLayer->drawSpiral(drawingColor, drawingWidth, aD->getCenters());
         }
         else
         {

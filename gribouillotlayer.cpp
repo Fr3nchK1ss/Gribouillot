@@ -295,6 +295,30 @@ void GribouillotLayer::loadXML(QString path)
                 spanAngle);
     }
 
+    /* Constructs SPIRALS graphics items */
+    QDomNodeList spirals = doc.elementsByTagName("Spiral");
+    for (int i=0; i < spirals.size();  ++i)
+    {
+        QDomElement p = spirals.item(i).toElement();
+        QVector<QPointF> centers;
+        qreal x0 = p.attribute("x0").toDouble();
+        qreal y0 = p.attribute("y0").toDouble();
+        qreal x1 = p.attribute("x1").toDouble();
+        qreal y1 = p.attribute("y1").toDouble();
+        qreal x2 = p.attribute("x2").toDouble();
+        qreal y2 = p.attribute("y2").toDouble();
+        qreal x3 = p.attribute("x3").toDouble();
+        qreal y3 = p.attribute("y3").toDouble();
+
+        centers = {QPointF(x0,y0), QPointF(x1,y1),
+                   QPointF(x2,y2), QPointF(x3,y3)};
+
+        QColor color = QColor(p.attribute("color"));
+        int width = p.attribute("penWidth").toInt();
+
+        drawSpiral(color, width, centers);
+    }
+
     /* Load PIXMAP */
     QDomNodeList pixmaps = doc.elementsByTagName("Pixmap");
     for (int i=0; i < pixmaps.size();  ++i)
@@ -384,6 +408,13 @@ bool GribouillotLayer::writeXML()
         {
             Item_arc* arc = qgraphicsitem_cast<Item_arc*>(item);
             arc->serialize2xml(&xW);
+        }
+
+        //Item_spiral
+        if( item->type() == SPIRAL )
+        {
+            Item_spiral* spiral = qgraphicsitem_cast<Item_spiral*>(item);
+            spiral->serialize2xml(&xW);
         }
 
         //Item_pixmap
@@ -1098,14 +1129,9 @@ QPointF GribouillotLayer::drawArcFromCircle(QColor penColor, int penWidth,
  * @brief   Draw a spiral as independent arcs
  * @details Each arc can be selected separately
  */
-void GribouillotLayer::drawSpiral(QColor penColor, int penWidth, Item_spiral *s)
+void GribouillotLayer::drawSpiral(QColor penColor, int penWidth, QVector<QPointF> centers)
 {
-    if (s != nullptr)
-    {
-        //set the drawing color and thickness
-        s->newPen(penColor, penWidth);
-        addItemToLayer(s);
-    }
+    addItemToLayer( new Item_spiral(penColor, penWidth, centers) );
 
 }
 

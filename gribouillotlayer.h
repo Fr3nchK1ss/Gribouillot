@@ -91,7 +91,7 @@ public:
                            Item_arc* arc);
 
     //Spiral drawing
-    void drawSpiral(QColor penColor, int penWidth, Item_spiral* s);
+    void drawSpiral(QColor penColor, int penWidth, QVector<QPointF> centers);
 
     //Pixmap drawing
     void drawPixmap(bool doCopy);

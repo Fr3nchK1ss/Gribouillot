@@ -134,16 +134,6 @@ QVector<Item_arc *> Item_spiralDrawer::getArcs()
 
 
 /**
- * @brief   Used by current layer to draw the spiral.
- * @return  The spiral as one single item.
- */
-Item_spiral* Item_spiralDrawer::getSpiral()
-{
-    return new Item_spiral(getCenters());
-}
-
-
-/**
  * @brief   Used by current layer to draw the base centers.
  * @return  The 4 centers of the spiral.
  */
@@ -221,19 +211,30 @@ void Item_spiralDrawer::paint(QPainter *painter, const QStyleOptionGraphicsItem 
         painter->drawLine(QLineF(p1,p2));
 
         //Draw an arc hint so the user can guess the soon-to-be spiral.
-        qreal arcHintAngle, spanAngle;
-        Item_spiral::computeArcAngles(side[0], side[1], arcHintAngle, spanAngle);
+            qreal arcHintAngle, spanAngle;
 
-        /*
-         * Find on which side of side[0] we must draw the arc Hint, in other
-         * words find if we must draw the spiral clockwise or counter-clockwise,
-         */
-        clockwise = ( side[0].angleTo(side[1]) > 180 );
-        int clockwiseHint = clockwise ? -1 : 1;
+            //initialize arcHintAngle and spanAngle
+            Item_spiral::computeArcAngles(side[0], side[1], arcHintAngle, spanAngle);
+            //compute drawing rectangle
+            QRectF arcRect0 = Item_spiral::computeArcRect(0, side);
+            arcRect0.translate(p1);//p1 == side[0].p2
 
-        QRectF arcRect0 = Item_spiral::computeArcRect(0, side);
-        arcRect0.translate(p1);//p1 == side[0].p2
-        painter->drawArc( arcRect0, arcHintAngle*16, clockwiseHint*30*16);
+            /*
+             * Find on which side of side[0] we must draw the arc Hint, in other
+             * words find if we must draw the spiral clockwise or counter-clockwise,
+             */
+            if ( side[0].angleTo(side[1]) > 180 )
+            {
+                //'-1' for a clockwise arc
+                painter->drawArc( arcRect0, arcHintAngle*16, -1*30*16);
+                clockwise = true;//for use in computeBase()
+            }
+            else
+            {
+                //Qt draws arcs counter-clockwise by default
+                painter->drawArc( arcRect0, arcHintAngle*16, 30*16);
+                clockwise = false;
+            }
 
         /*
         painter->setPen(Qt::blue);
@@ -263,7 +264,7 @@ void Item_spiralDrawer::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     if (remainingClicks == 3)
     {
-        //The first clicks sets the first center
+        //The first clicks set the first center which is also the spiral position.
         setPos(event->scenePos());
     }
     else if(remainingClicks == 0)

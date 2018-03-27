@@ -52,7 +52,6 @@ Gribouillot::Gribouillot(QWidget *parent) :
 
     //Menu connections
     connect (ui->actionAbout_Qt, SIGNAL(triggered(bool)), qApp, SLOT(aboutQt()));
-    ui->actionCopy_pixmaps->setChecked(true);
 
     //TabWidget
     ui->tabWidget->setTabText(0, tr("Background map"));
@@ -531,11 +530,21 @@ void Gribouillot::openProject(QString gribFile)
         }
 
 
-        //Restore drawing options for 4C spiral
+        if(settings.value("minimap").toBool())
+        {
+            ui->actionMinimap->setChecked(true);
+            //minimap->setGeometry(QRect(0,0,250,150));
+        }
+
         settings.beginGroup("spiral");
-        spiralDialog->loadData( settings.value("construct1Item").toBool(),
+        spiralDialog->loadData( settings.value("constructAsOneItem").toBool(),
                                 settings.value("baseDisplay").toBool(),
-                                settings.value("CentersOnlyBase").toBool());
+                                settings.value("showBaseCentersOnly").toBool());
+        settings.endGroup();
+
+        settings.beginGroup("auto");
+        ui->actionCopy_pixmaps->setChecked( settings.value("copyPixmaps", true).toBool() );
+        autosaveTime = settings.value("autosave", 0).toInt();
         settings.endGroup();
 
 
@@ -559,13 +568,6 @@ void Gribouillot::openProject(QString gribFile)
                                      +" : "+notFound,
                                      QMessageBox::Ok);
         settings.endGroup();
-
-        //Display minimap if necessary
-        if(settings.value("minimap").toBool())
-        {
-            ui->actionMinimap->setChecked(true);
-            //minimap->setGeometry(QRect(0,0,250,150));
-        }
 
     }
 
@@ -770,11 +772,25 @@ void Gribouillot::saveProject()
             settings.setValue("gpsEnabled", gpsEnabled);
         settings.endGroup();
 
-        //Save drawing options for 4C spiral
+        /************************** Save Tools menu ****************************/
+        //save Minimap mode
+        if (ui->actionMinimap->isChecked())
+            settings.setValue("minimap", true);
+        else
+            settings.setValue("minimap", false);
+
+        //save drawing options for 4C spiral
         settings.beginGroup("spiral");
-            settings.setValue("construct1Item", spiralDialog->isOneItem());
+            settings.setValue("constructAsOneItem", spiralDialog->isOneItem());
             settings.setValue("baseDisplay", spiralDialog->isBaseDisplayed());
-            settings.setValue("CentersOnlyBase", spiralDialog->showBaseCentersOnly());
+            settings.setValue("showBaseCentersOnly", spiralDialog->showBaseCentersOnly());
+        settings.endGroup();
+
+        /*********************** Save Preferences menu *************************/
+        //save auto-copy of imported pixmaps to project folder
+        settings.beginGroup("auto");
+            settings.setValue("copyPixmaps", ui->actionCopy_pixmaps->isChecked());
+            settings.setValue("autosave", autosaveTime);
         settings.endGroup();
 
         /*
@@ -815,14 +831,8 @@ void Gribouillot::saveProject()
                     savedLabels << label;
                 }
             }
-
         settings.endGroup();
 
-        //save Minimap mode
-        if (ui->actionMinimap->isChecked())
-            settings.setValue("minimap", true);
-        else
-            settings.setValue("minimap", false);
 
         //User feedback
         statusBar()->showMessage(tr("Project saved ( ")+
@@ -852,24 +862,6 @@ void Gribouillot::on_actionExportAs_triggered()
         pix.save(filename);
     }
 
-}
-
-
-
-
-/**
- * @brief   Display informations about Gribouillot
- */
-void Gribouillot::on_actionAbout_Grib_triggered()
-{
-    QMessageBox::about(this,
-                       tr("About Gribouillot"),
-                       tr(
-    "<p>Gribouillot is an open source application under GPL3 license. Please refer to "
-    "<a href=\"http://www.gnu.org/licenses/\">http://www.gnu.org/licenses/</a> for the license details."
-    "<p><br/>This software was created with the first intent to help people in search of the "
-    "Golden Owl, a famous French treasure.<br/>"
-    "Author : <b>Ludovic A.</b></p>"));
 }
 
 
@@ -922,6 +914,33 @@ void Gribouillot::on_actionSpiralOptions_triggered()
     spiralDialog->show();
     spiralDialog->raise();
 }
+
+
+/**
+ * @brief   Save the project automatically every x minutes
+ */
+void Gribouillot::on_actionAutosave_triggered()
+{
+    qDebug() << "triggered";
+
+}
+
+
+/**
+ * @brief   Display informations about Gribouillot
+ */
+void Gribouillot::on_actionAbout_Grib_triggered()
+{
+    QMessageBox::about(this,
+                       tr("About Gribouillot"),
+                       tr(
+    "<p>Gribouillot is an open source application under GPL3 license. Please refer to "
+    "<a href=\"http://www.gnu.org/licenses/\">http://www.gnu.org/licenses/</a> for the license details."
+    "<p><br/>This software was created with the first intent to help people in search of the "
+    "Golden Owl, a famous French treasure.<br/>"
+    "Author : <b>Ludovic A.</b></p>"));
+}
+
 
 
 /*********************** private slots ** Scene events ****************************
@@ -1196,4 +1215,3 @@ void Gribouillot::doAddItemToScene(QGraphicsItem* item)
 {
     scene->addItem(item);
 }
-

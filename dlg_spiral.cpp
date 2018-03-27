@@ -7,17 +7,15 @@ Dlg_spiral::Dlg_spiral(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->label->setText( tr(
-      "<font color='blue'>"
-      "<p>To draw the 4 centers spiral you can define 4, 3 or only 2 "
-      "centers then press [Enter], knowing that:</br>"
-      "<ul><li>From 2 centers Gribouillot deduces a square base.</li>"
-      "<li>From 3 centers Gribouillot computes a trapezium base.</li>"
+      "<font color='black'>"
+      "<p>To draw a 4 centers spiral you can define 4 positions manually. You can "
+      "also define only 3 or 2 centers then press [Enter]:</br>"
+      "<ul><li>from 2 centers Gribouillot infers a square-shaped base.</li>"
+      "<li>From 3 centers Gribouillot infers a trapezium base.</li>"
       "</ul></br>"
-      "You can hold the [Maj] key to draw a base side perpendicular to the previous one, "
-      "for example in the case of a rectangle based spiral. "
-      "Further construction options are available below.</p>"
+      "You can hold the [Maj] key to draw a side perpendicular to the previous one, "
+      "for example to draw a rectangle based spiral.</p>"
       "</font>"));
-
 
 }
 

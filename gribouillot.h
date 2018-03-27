@@ -66,6 +66,9 @@ private:
     //Spiral options
     Dlg_spiral* spiralDialog;
 
+    //Autosave interval in mins
+    int autosaveTime = 0;
+
     //drawing variables
     QActionGroup* drawingGroup;
     QCursor drawingCursor;
@@ -112,6 +115,7 @@ private slots:
     void on_actionMinimap_toggled(bool isChecked);
     void on_actionCenterOfMass_triggered();
     void on_actionSpiralOptions_triggered();
+    void on_actionAutosave_triggered();
     void on_actionAbout_Grib_triggered();
 
     //MapTabWidget actions
@@ -191,6 +195,7 @@ private slots:
     void finalizeSpiral(QString errorMsg);
 
     void on_actionLoadPicture_triggered();
+
 };
 
 #endif // GRIBOUILLOT_H

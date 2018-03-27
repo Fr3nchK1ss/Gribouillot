@@ -27,7 +27,7 @@ public:
         // Enable the use of qgraphicsitem_cast with this item.
         return SPIRAL;
     }
-    explicit Item_spiral(QVector<QPointF> base, QColor penColor = Qt::black, int penWidth = 3);
+    explicit Item_spiral(QColor penColor, int penWidth, QVector<QPointF> base);
     ~Item_spiral(){}
 
     void newPen(QColor penColor, int penWidth);

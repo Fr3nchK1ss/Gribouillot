@@ -39,7 +39,6 @@ public:
     ~Item_spiralDrawer(){}
 
     QVector<Item_arc *> getArcs();
-    Item_spiral* getSpiral();
     QVector<QPointF> getCenters();
     QVector<QLineF> getBase();
 

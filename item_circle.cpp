@@ -9,12 +9,10 @@
 
 #include <QDebug>
 #include <QPen>
+#include <QtMath>
 
 #include "item_circle.h"
 
-#ifndef M_PI
-    #define M_PI 3.14159265358979323846
-#endif
 
 Item_circle::Item_circle(QColor penColor, int penWidth, QPointF center,
                          qreal radius):

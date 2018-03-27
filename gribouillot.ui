@@ -76,8 +76,6 @@
     <addaction name="actionImport_layer"/>
     <addaction name="actionSaveProject"/>
     <addaction name="separator"/>
-    <addaction name="actionCopy_pixmaps"/>
-    <addaction name="separator"/>
     <addaction name="actionExportAs"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
@@ -97,8 +95,16 @@
     <addaction name="actionAbout_Grib"/>
     <addaction name="actionAbout_Qt"/>
    </widget>
+   <widget class="QMenu" name="menuPreferences">
+    <property name="title">
+     <string>Preferences</string>
+    </property>
+    <addaction name="actionCopy_pixmaps"/>
+    <addaction name="actionAutosave"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOptions"/>
+   <addaction name="menuPreferences"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
@@ -653,6 +659,17 @@
    </property>
    <property name="toolTip">
     <string>Draw a circle with the selected segment as diameter</string>
+   </property>
+  </action>
+  <action name="actionAutosave">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Autosave</string>
+   </property>
+   <property name="toolTip">
+    <string>Define autosave interval</string>
    </property>
   </action>
  </widget>

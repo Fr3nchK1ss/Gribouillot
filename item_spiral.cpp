@@ -15,7 +15,7 @@
 
 #include "item_spiral.h"
 
-Item_spiral::Item_spiral(QVector<QPointF> base, QColor penColor, int penWidth)
+Item_spiral::Item_spiral(QColor penColor, int penWidth, QVector<QPointF> base)
 {
     setPos(base[0]);
 
