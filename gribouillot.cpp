@@ -153,7 +153,6 @@ void Gribouillot::closeEvent(QCloseEvent *event)
 
 
 
-
 /************************* Private functions - UI ****************************/
 
 /**
@@ -423,7 +422,6 @@ void Gribouillot::openProject(QString gribFile)
     if ( !gribFile.isEmpty() )
     {
         QFileInfo gribFileInfo = QFileInfo(gribFile);
-        QStringList layersList;
         QString notFound ="";
 
 
@@ -436,7 +434,7 @@ void Gribouillot::openProject(QString gribFile)
         QSettings settings(gribFile, QSettings::IniFormat);
 
 
-        //Background map
+        //Restore background map
         mapPath = settings.value("map/mapPath").toString();
         mapTabName = settings.value("map/mapTabName").toString();
         QFileInfo mapFileInfo = QFileInfo(mapPath);
@@ -504,10 +502,9 @@ void Gribouillot::openProject(QString gribFile)
                 settings.value("customColor/color"+QString::number(i)).value<QColor>());
         }
 
-        /*
-         * Restore scale spinBoxes.
-         * NOTE: setting new SpinBox values automatically triggers a new scale computation.
-         */
+
+        //Restore scale spinBoxes.
+        //NOTE: setting new SpinBox values automatically triggers a new scale computation.
         ui->mapTabWidget->ui->pxSpinBox->setValue(settings.value("scale/pxSpinBx").toDouble());
         ui->mapTabWidget->ui->kmSpinBox->setValue(settings.value("scale/kmSpinBx").toDouble());
         ui->mapTabWidget->ui->mKmComboBox->setCurrentIndex(settings.value("scale/mkmUnit").toInt());
@@ -530,19 +527,24 @@ void Gribouillot::openProject(QString gribFile)
         }
 
 
+        //Display minimap if necessary TODO: project independent setting
         if(settings.value("minimap").toBool())
         {
             ui->actionMinimap->setChecked(true);
             //minimap->setGeometry(QRect(0,0,250,150));
         }
 
+
+        //Restore spiral dialog settings TODO: project independent setting
         settings.beginGroup("spiral");
         spiralDialog->loadData( settings.value("constructAsOneItem").toBool(),
                                 settings.value("baseDisplay").toBool(),
                                 settings.value("showBaseCentersOnly").toBool());
         settings.endGroup();
 
-        settings.beginGroup("auto");
+
+        //Restore Autosave settings TODO: project independent setting
+        settings.beginGroup("preferences");
         ui->actionCopy_pixmaps->setChecked( settings.value("copyPixmaps", true).toBool() );
         autosaveTime = settings.value("autosave", 0).toInt();
         settings.endGroup();
@@ -550,16 +552,29 @@ void Gribouillot::openProject(QString gribFile)
 
         //Restore layers from XML files located in current project folder
         settings.beginGroup("layersOrder");
-            layersList = settings.allKeys();
-            foreach (QString layerKey, layersList)
+            QMap<int, QString> layers;
+
+            /*
+             * Retrieve the indexed order of the layers with a QMap because QSettings
+             * write settings values on file in alphabetical order.
+             */
+            foreach (QString layerKey, settings.allKeys())
             {
-                //qDebug() << layerKey;
-                QString layerPath = settings.value(layerKey).toString()+".xml";
+                int key = layerKey.toInt();
+                layers[key] = settings.value(layerKey).toString()+".xml";
+
+            }
+            //qDebug() << layers;
+
+            //Open layers in the correct order
+            foreach (QString layerPath, layers)
+            {
                 if ( QFile::exists(layerPath) )
                     addNewLayer(layerPath);
                 else
                     notFound += layerPath+", ";
             }
+
             if (!notFound.isEmpty())
                 QMessageBox::warning(this,
                                      currentProjectName,
@@ -626,11 +641,12 @@ void Gribouillot::addNewLayer(QString path)
 
 
 /**
- * @brief   Save the order of the layers after a layer deletion.
+ * @brief   Save the order of the layers after a layer deletion. Order only!
  * @detail  A deleted layer has its corresponding file definitively removed from disk.
  */
 void Gribouillot::saveLayersOrder()
 {
+
     QSettings settings(currentProjectName+".grib",
                        QSettings::IniFormat);
 
@@ -640,7 +656,7 @@ void Gribouillot::saveLayersOrder()
         for (int i = 1; i < (ui->tabWidget->count() -1); ++i)
         {
             GribouillotLayer *layer = dynamic_cast<GribouillotLayer *>(ui->tabWidget->widget(i));
-            settings.setValue("layer"+QString::number(i), layer->getLabel());
+            settings.setValue(QString::number(i), layer->getLabel());
         }
     settings.endGroup();
 
@@ -772,12 +788,9 @@ void Gribouillot::saveProject()
             settings.setValue("gpsEnabled", gpsEnabled);
         settings.endGroup();
 
-        /************************** Save Tools menu ****************************/
+
         //save Minimap mode
-        if (ui->actionMinimap->isChecked())
-            settings.setValue("minimap", true);
-        else
-            settings.setValue("minimap", false);
+        settings.setValue("minimap", ui->actionMinimap->isChecked());
 
         //save drawing options for 4C spiral
         settings.beginGroup("spiral");
@@ -786,58 +799,58 @@ void Gribouillot::saveProject()
             settings.setValue("showBaseCentersOnly", spiralDialog->showBaseCentersOnly());
         settings.endGroup();
 
-        /*********************** Save Preferences menu *************************/
-        //save auto-copy of imported pixmaps to project folder
-        settings.beginGroup("auto");
+
+        settings.beginGroup("preferences");
             settings.setValue("copyPixmaps", ui->actionCopy_pixmaps->isChecked());
             settings.setValue("autosave", autosaveTime);
         settings.endGroup();
 
-        /*
-         * Ask each layer to write its own XML file but save the tab order in the grib file.
-         * Some explanations on the loop values:
-         * int i = 1  and not int i = 0    becoz the first tab is no layer (mapTab)
-         * count() -1 and not just count() becoz the last tab is no layer (plusTab)
-         */
 
+        //Save layers
         settings.beginGroup("layersOrder");
-            settings.remove("");
+        settings.remove("");
 
             QStringList savedLabels;
-
+            /*
+             * Ask each layer to write its own XML file but save the tab order in the grib file.
+             * Some explanations on the loop values:
+             * int i = 1  and not int i = 0    becoz the first tab is no layer (mapTab)
+             * count() -1 and not just count() becoz the last tab is no layer (plusTab)
+             */
             for (int i = 1; i < (ui->tabWidget->count() -1); ++i)
             {
                 GribouillotLayer *layer = dynamic_cast<GribouillotLayer *>(ui->tabWidget->widget(i));
                 QString label = layer->getLabel();
 
-                //Two layers with the same label would write into the same file on disk!
                 if ( savedLabels.contains(label) )
                 {
+                    //Two layers with the same label would write into the same file on disk!
                     ui->tabWidget->setTabIcon(i,QIcon(QPixmap(":/Resources/Icons/exclamation.png")));
                     QMessageBox::warning(this,
                              tr("Layer name conflict!"),
                              label+tr(": another layer was already saved under "
                              "this name, please change the name of the layer."),
                              QMessageBox::Ok);
-                    label = layer->newLabel(true);
+                    label = layer->newLabel(true);//a dialog asks for new label
                     ui->tabWidget->setTabIcon(i, QIcon());
                     ui->tabWidget->setTabText(i, label);
-                    //The layer has a new label, a new data file will be created by writeXML()
+                    //At this point the layer has a new label, we can continue normally
                 }
 
                 if(layer->writeXML())
                 {
-                    settings.setValue("layer"+QString::number(i), label);
+                    settings.setValue(QString::number(i), label);
                     savedLabels << label;
                 }
             }
+
         settings.endGroup();
 
 
         //User feedback
-        statusBar()->showMessage(tr("Project saved ( ")+
+        statusBar()->showMessage(tr("Project saved (")+
                                  QString::number(savedLabels.size())+
-                                 tr(" layer(s) saved )."));
+                                 tr(" layers saved)."));
     }
 }
 
@@ -1200,10 +1213,10 @@ void Gribouillot::doChangeLayerName(QString label)
  */
 void Gribouillot::doDeleteLayer()
 {
-    GribouillotLayer* layer = currentLayer;
+    GribouillotLayer* layerX = currentLayer;
     ui->tabWidget->removeTab(currentTabIndex);
-    //After removeTab() we have currentLayer != layer...
-    delete layer;
+    //After removeTab() we have currentLayer != layerX
+    delete layerX;
 
     saveLayersOrder();
 }
