@@ -21,6 +21,7 @@ Item_scaleRuler::Item_scaleRuler(QGraphicsItem * parent) :
     pen.setWidth(5);
     pen.setStyle(Qt::DotLine);
     pen.setCosmetic(true);//Very important to keep it visible when zooming out.
+    pen.setCapStyle(Qt::FlatCap);
     setPen(pen);
 
     reset();

@@ -45,6 +45,8 @@ protected:
 private:
     QVector<QLineF> baseSide;
     QVector<QRectF> arcsRect;
+    qreal startAngles[4];
+    qreal spanAngles[4];
 
     bool clockwise;
     qreal selectionMargin;

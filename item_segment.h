@@ -40,7 +40,8 @@ protected:
 
 private:
     QPolygonF selectionPolygon;
-    void createSelectionPolygon();
+
+    void createSelectionPolygon(int penWidth);
 
 };
 

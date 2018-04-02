@@ -18,6 +18,19 @@
 GribouillotScene::GribouillotScene(QObject *parent) :
     QGraphicsScene(parent)
 {
+    //Pens similar to Qt's selection pens
+    QPen selectPen0(Qt::black);
+    selectPen0.setDashPattern(QVector<qreal>({4,2}));
+    selectPen0.setCosmetic(true);
+
+    QPen selectPen1(Qt::white);
+    selectPen1.setDashOffset(2);
+    selectPen1.setDashPattern(QVector<qreal>({2,4}));
+    selectPen1.setCosmetic(true);
+
+    selectPens << selectPen0;
+    selectPens << selectPen1;
+
 }
 
 
@@ -38,6 +51,15 @@ void GribouillotScene::disableItemsSpecifics()
             item->setEnabled(false);
         //to complete if necessary
     }
+}
+
+
+/**
+ * @brief Return the pens used for drawing selection boxes
+ */
+QVector<QPen> GribouillotScene::getSelectPens()
+{
+    return selectPens;
 }
 
 

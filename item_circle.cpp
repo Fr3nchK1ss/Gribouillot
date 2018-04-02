@@ -12,7 +12,7 @@
 #include <QtMath>
 
 #include "item_circle.h"
-
+#include "gribouillotscene.h"
 
 Item_circle::Item_circle(QColor penColor, int penWidth, QPointF center,
                          qreal radius):
@@ -33,6 +33,7 @@ void Item_circle::newPen(QColor penColor, int penWidth)
 {
     QPen pen(penColor, penWidth);
     pen.setCosmetic(true);//Very important to keep circles visible when zooming out.
+    pen.setCapStyle(Qt::FlatCap);
     setPen(pen);
 
     selectionMargin = penWidth/2+5;
@@ -86,11 +87,12 @@ QRectF Item_circle::boundingRect() const
 /**
  * @brief   A collision shape for a circle. In LOCAL coordinates!
  * @details Defined as an almost closed circular band. Paste this
- *          code in 'paint' with a drawPath(path) to see the result.
+ *          code in paint() with a drawPath(path) to see the result.
  */
 QPainterPath Item_circle::shape() const
 {
     QLineF radius(0,0,1,0);
+    QPointF offset(selectionMargin, selectionMargin);
     QVector<QPointF> coords;
 
     radius.setLength(getRadius()-selectionMargin);
@@ -101,7 +103,6 @@ QPainterPath Item_circle::shape() const
     radius.setLength(getRadius()-selectionMargin);
     coords << radius.p2();
 
-    QPointF offset(selectionMargin, selectionMargin);
     QRectF inRect(rect().topLeft() + offset,
                  rect().bottomRight() - offset);
     QRectF outRect = boundingRect();
@@ -128,26 +129,19 @@ void Item_circle::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
     painter->setPen(pen());
     painter->drawEllipse(QPointF(0,0), getRadius(), getRadius());
 
+
     if (isSelected())
     {
-        qreal inRadius = getRadius()-selectionMargin;
+        //qreal inRadius = getRadius()-selectionMargin;
         qreal outRadius = getRadius()+selectionMargin;
-        //draw a selection box similar to Qt's
-        QPen selectPen1(Qt::black);
-        selectPen1.setDashPattern(QVector<qreal>({4,2}));
-        selectPen1.setCosmetic(true);
 
-        QPen selectPen2(Qt::white);
-        selectPen2.setDashOffset(2);
-        selectPen2.setDashPattern(QVector<qreal>({2,4}));
-        selectPen2.setCosmetic(true);
+        foreach(QPen selectPen, dynamic_cast<GribouillotScene*>(scene())->getSelectPens())
+        {
+            painter->setPen(selectPen);
+            painter->drawEllipse(QPointF(), outRadius, outRadius);
+            //painter->drawEllipse(QPointF(), inRadius, inRadius);
+        }
 
-        painter->setPen(selectPen1);
-        painter->drawEllipse(QPointF(), inRadius, inRadius);
-        painter->drawEllipse(QPointF(), outRadius, outRadius);
-        painter->setPen(selectPen2);
-        painter->drawEllipse(QPointF(), inRadius, inRadius);
-        painter->drawEllipse(QPointF(), outRadius, outRadius);
     }
 
 }

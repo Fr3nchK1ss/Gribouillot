@@ -15,6 +15,7 @@
 
 #include "dlg_arcangle.h"
 #include "item_arc.h"
+#include "gribouillotscene.h"
 
 Item_arc::Item_arc(QPointF center, QRectF rect, qreal startAngle, qreal spanAngle,
                    QColor penColor, int penWidth)
@@ -38,6 +39,7 @@ void Item_arc::newPen(QColor penColor, int penWidth)
 {
     QPen pen(penColor, penWidth);
     pen.setCosmetic(true);
+    pen.setCapStyle(Qt::FlatCap);
     setPen(pen);
 
     selectionMargin = penWidth/2+5;//in px
@@ -103,7 +105,7 @@ QRectF Item_arc::boundingRect() const
 {
     QPointF offset(selectionMargin, selectionMargin);
     QRectF bRect(arcRect.topLeft() - offset,
-                arcRect.bottomRight() + offset);
+                    arcRect.bottomRight() + offset);
 
     return bRect;
 
@@ -159,20 +161,12 @@ void Item_arc::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 
     if (isSelected())
     {
-        //draw a selection box similar to Qt's
-        QPen selectPen1(Qt::black);
-        selectPen1.setDashPattern(QVector<qreal>({4,2}));
-        selectPen1.setCosmetic(true);
+        foreach(QPen selectPen, dynamic_cast<GribouillotScene*>(scene())->getSelectPens())
+        {
+            painter->setPen(selectPen);
+            painter->drawPath(shape());
+        }
 
-        QPen selectPen2(Qt::white);
-        selectPen2.setDashOffset(2);
-        selectPen2.setDashPattern(QVector<qreal>({2,4}));
-        selectPen2.setCosmetic(true);
-
-        painter->setPen(selectPen1);
-        painter->drawPath(shape());
-        painter->setPen(selectPen2);
-        painter->drawPath(shape());
     }
 
 }

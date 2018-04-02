@@ -174,7 +174,7 @@ QRectF Item_spiralDrawer::boundingRect() const
     qreal maxRadius = qMax(qMax(radius1,radius2), radius3);
     qreal bRectWidth = maxRadius*2 + pen().width() + 10;//10px as a margin
 
-    return QRectF(QPointF(-bRectWidth/2, -bRectWidth/2), QSize(bRectWidth, bRectWidth));
+    return QRectF(QPointF(-bRectWidth/2, -bRectWidth/2), QSizeF(bRectWidth, bRectWidth));
 
 }
 

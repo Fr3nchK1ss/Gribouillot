@@ -13,12 +13,28 @@
 #include <QtMath>
 
 #include "item_segment.h"
+#include "gribouillotscene.h"
 
 Item_segment::Item_segment(QColor penColor, int penWidth, QPointF points[]):
     QGraphicsLineItem(QLineF(points[0], points[1]))
 {
     newPen(penColor, penWidth);
-    //call createSelectionPolygon
+
+}
+
+
+/**
+ * @brief Define the drawing pen
+ */
+void Item_segment::newPen(QColor penColor, int penWidth)
+{
+    QPen pen(penColor, penWidth);
+    pen.setCosmetic(true);//Very important to keep circles visible when zooming out.
+    pen.setCapStyle(Qt::FlatCap);
+    setPen(pen);
+
+    createSelectionPolygon(penWidth);
+    update();
 }
 
 
@@ -27,13 +43,14 @@ Item_segment::Item_segment(QColor penColor, int penWidth, QPointF points[]):
  * @details Implies a new implementation of paint(), shape() and
  *          boundingRect()
  */
-void Item_segment::createSelectionPolygon(){
+void Item_segment::createSelectionPolygon(int penWidth)
+{
     QPolygonF nPolygon;
-    int selectionOffset = pen().width()+5;
+    int selectionMargin = penWidth+5;
 
     qreal radAngle = qDegreesToRadians(line().angle());
-    qreal dx = selectionOffset * qSin(radAngle);
-    qreal dy = selectionOffset * qCos(radAngle);
+    qreal dx = selectionMargin * qSin(radAngle);
+    qreal dy = selectionMargin * qCos(radAngle);
     QPointF offset1 = QPointF(dx, dy);
     QPointF offset2 = QPointF(-dx, -dy);
     nPolygon << line().p1() + offset1
@@ -42,19 +59,8 @@ void Item_segment::createSelectionPolygon(){
              << line().p2() + offset1;
     selectionPolygon = nPolygon;
 
-    update();
-
 }
 
-
-void Item_segment::newPen(QColor penColor, int penWidth)
-{
-    QPen pen(penColor, penWidth);
-    pen.setCosmetic(true);//Very important to keep circles visible when zooming out.
-    setPen(pen);
-
-    createSelectionPolygon();//depends on penWidth
-}
 
 
 void Item_segment::serialize2xml(QXmlStreamWriter* w)
@@ -91,9 +97,9 @@ QRectF Item_segment::boundingRect() const
 
 QPainterPath Item_segment::shape() const
 {
-    QPainterPath ret;
-    ret.addPolygon(selectionPolygon);
-    return ret;
+    QPainterPath path;
+    path.addPolygon(selectionPolygon);
+    return path;
 }
 
 
@@ -106,22 +112,17 @@ void Item_segment::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
     painter->setPen(pen());
     painter->drawLine(line());
 
+
     if (isSelected())
     {
-        //draw a selection box similar to Qt's
-        QPen selectPen1(Qt::black);
-        selectPen1.setDashPattern(QVector<qreal>({4,2}));
-        selectPen1.setCosmetic(true);
+        foreach(QPen selectPen, dynamic_cast<GribouillotScene*>(scene())->getSelectPens())
+        {
+            painter->setPen(selectPen);
+            painter->drawPolygon(selectionPolygon);
+        }
 
-        QPen selectPen2(Qt::white);
-        selectPen2.setDashOffset(2);
-        selectPen2.setDashPattern(QVector<qreal>({2,4}));
-        selectPen2.setCosmetic(true);
-
-        painter->setPen(selectPen1);
-        painter->drawPolygon(selectionPolygon);
-        painter->setPen(selectPen2);
-        painter->drawPolygon(selectionPolygon);
     }
+
+
 
 }

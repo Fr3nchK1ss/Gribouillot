@@ -14,20 +14,36 @@
 #include <QtMath>
 
 #include "item_spiral.h"
+#include "gribouillotscene.h"
 
 Item_spiral::Item_spiral(QColor penColor, int penWidth, QVector<QPointF> base)
 {
+    qreal startAngle, spanAngle;
+
     setPos(base[0]);
+
+    //compute the 4 sides from the 4 centers
+    for(int i = 0; i < base.length(); ++i)
+        baseSide << QLineF(base[i], base[(i+1)%4]);
+
 
     for(int i = 0; i < base.length(); ++i)
     {
-        baseSide << QLineF(base[i], base[(i+1)%4]);
-        //Compute arcs rectangles already
-        arcsRect << computeArcRect(i, baseSide);
-        boundingRect();
+        //Retrieve arcRect for baseSide[i] in zero-centered coordinates
+        QRectF zeroCenteredArcRect = computeArcRect(i, baseSide);
+        //Position the arcRect correctly in spiral local coordinates
+        arcsRect << zeroCenteredArcRect.translated(mapFromScene(baseSide[i].p2()));
+
+        //compute the arcs angles
+        computeArcAngles(baseSide[i], baseSide[(i+1)%4], startAngle, spanAngle);
+        startAngles[i] = startAngle;
+        spanAngles[i] = spanAngle;
     }
 
-    newPen(penColor, penWidth);//will call createBoundingPath
+    //recalculate boundingRect for proper display
+    boundingRect();
+
+    newPen(penColor, penWidth);
 }
 
 
@@ -38,6 +54,7 @@ void Item_spiral::newPen(QColor penColor, int penWidth)
 {
     QPen pen(penColor, penWidth);
     pen.setCosmetic(true);
+    pen.setCapStyle(Qt::FlatCap);
     setPen(pen);
 
     selectionMargin = penWidth/2+5;//in px
@@ -83,18 +100,19 @@ void Item_spiral::serialize2xml(QXmlStreamWriter *w)
 
 /********************** Public static functions *********************/
 /**
- * @brief Compute the rectangle necessary to draw the arc of a
- *        specific side. The rectangle is in local coordinates.
+ * @brief   Compute the rectangle necessary to draw the arc of a
+ *          specific side in coordinates centered on zero.
+ * @details static public function
  */
 QRectF Item_spiral::computeArcRect(int sideNumber, QVector<QLineF> side)
 {
-    QRectF arcRect = QRectF();
+    QRectF arcRect;
     QLineF s = side[sideNumber];//For convenience
 
     if(!s.isNull())
     {
         /*
-         * The rectangle half-width for side 'i' is the length of the
+         * The arcRect half-width for side 'i' is the length of the
          * current side plus the length of the previous sides if any:
          * -> this is how a spiral grows!
          */
@@ -102,23 +120,18 @@ QRectF Item_spiral::computeArcRect(int sideNumber, QVector<QLineF> side)
         for (int i = 0; i < sideNumber; ++i)
             radius += side[i].length();
 
-        /*
-         * The arc rectangle is by definition centered on 0,
-         * in the local coordinates of the arc.
-         */
+        //Build the rectangle of proper radius
         QLineF horizontal(QPointF(0,0), QPointF(-radius,0));
-        //horizontal.setLength(-radius);
-
-
         //halfLeftSide is the upper-half part of the left side of the rectangle.
         QLineF halfLeftSide = QLineF(horizontal.p2(), horizontal.p1()).normalVector();
         QPointF topLeft = halfLeftSide.p2();
-        arcRect = QRectF(topLeft, QSize(2*radius, 2*radius));
+        arcRect = QRectF(topLeft, QSizeF(2*radius, 2*radius));
 
     }
 
     return arcRect;
 }
+
 
 
 /**
@@ -132,7 +145,6 @@ void Item_spiral::computeArcAngles(QLineF sideA, QLineF sideB,
     if(!sideA.isNull() && !sideB.isNull())
     {
         //qDebug() << "angles for side: " << side1;
-
         QLineF horizontal(sideA.p1(), sideA.p1()+QPointF(1,0));
         QLineF flip(sideA.p2(), sideA.p1());
 
@@ -155,12 +167,8 @@ void Item_spiral::computeArcAngles(QLineF sideA, QLineF sideB,
  */
 QRectF Item_spiral::boundingRect() const
 {
-    qreal radius = 0;
-
-    //Compute longest radius of the spiral (= sum of each side)
-    for (int i = 0; i < baseSide.length(); ++i)
-        radius += baseSide[i].length();
-    //radius += baseSide[0].length();
+    //arcRect[3] is mathematically the biggest arc of the spiral
+    qreal radius = arcsRect[3].width()/2.0;
 
     QRectF bRect( -(radius + selectionMargin), -(radius + selectionMargin),
                   2* (radius + selectionMargin), 2* (radius + selectionMargin));
@@ -176,34 +184,47 @@ QRectF Item_spiral::boundingRect() const
  */
 QPainterPath Item_spiral::shape() const
 {
-    QLineF radius(0,0,1,0);
     QVector<QPointF> coords;
     QPainterPath path;
-/*
-    radius.setAngle(startAngle);
-    radius.setLength(getRadius()-selectionMargin);
-    coords << radius.p2();
-    radius.setLength(getRadius()+selectionMargin);
-    coords << radius.p2();
-    radius.setAngle(startAngle+spanAngle);
-    radius.setLength(getRadius()-selectionMargin);
-    coords << radius.p2();
-
     QPointF offset(selectionMargin, selectionMargin);
-    QRectF inRect(arcRect.topLeft() + offset,
-                    arcRect.bottomRight() - offset);
-    QRectF outRect = boundingRect();
+    QRectF offsetArcRect;
 
+    //Calculate coordinates of key points of the path
+    QLineF s0(mapFromScene(baseSide[0].p2()), mapFromScene(baseSide[0].p1()));//reverse baseSide[0]
+    s0.setLength(s0.length() + selectionMargin);
+    coords << s0.p2();
+    s0.setLength(s0.length() + arcsRect[3].width()/2 - selectionMargin);
+    coords << s0.p2();
+
+    //Move to the starting point of the path
     path.moveTo(coords[0]);
+
+    //Outer arcs path
+    for (int i = 0; i < arcsRect.size(); ++i )
+    {
+        offsetArcRect= QRectF(arcsRect[i].topLeft()-offset, arcsRect[i].bottomRight() + offset);
+        path.arcTo(offsetArcRect,
+                   startAngles[i],
+                   spanAngles[i]);
+    }
+
+    //Link outer and inner arcs
     path.lineTo(coords[1]);
-    path.arcTo(outRect, startAngle, spanAngle);
-    path.lineTo(coords[2]);
-    path.arcTo(inRect, startAngle+spanAngle, -spanAngle);//back to coords[0]
+
+    //Inner arcs path
+    for (int i = arcsRect.size()-1; i >= 0; --i )
+    {
+        //Build the arcRect of the path
+        offsetArcRect= QRectF(arcsRect[i].topLeft() + offset, arcsRect[i].bottomRight() - offset);
+        path.arcTo(offsetArcRect,
+                   startAngles[i]+spanAngles[i],
+                   -spanAngles[i]);
+    }
+
+    //Link inner and outer arcs, close path
+    path.lineTo(coords[0]);
     path.closeSubpath();
 
-
-*/
-    path.addRect(boundingRect());
     return path;
 
 }
@@ -217,16 +238,12 @@ void Item_spiral::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
 {
     Q_UNUSED(option);
     Q_UNUSED(widget);
-    qreal startAngle, spanAngle;
-    QRectF arcRect;
 
     painter->setPen(this->pen());
 
-    for(int i = 0; i < baseSide.size(); ++i)
+    for(int i = 0; i < arcsRect.size(); ++i)
     {
-        computeArcAngles(baseSide[i], baseSide[(i+1)%4], startAngle, spanAngle);
-        arcRect = arcsRect[i].translated(mapFromScene(baseSide[i].p2()));
-        painter->drawArc(arcRect, startAngle*16, spanAngle*16);
+        painter->drawArc(arcsRect[i], startAngles[i]*16, spanAngles[i]*16);
     }
 
     //painter->setPen(QPen(Qt::blue));
@@ -234,20 +251,12 @@ void Item_spiral::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
 
     if (isSelected())
     {
-        //draw a selection box similar to Qt's
-        QPen selectPen1(Qt::black);
-        selectPen1.setDashPattern(QVector<qreal>({4,2}));
-        selectPen1.setCosmetic(true);
+        foreach(QPen selectPen, dynamic_cast<GribouillotScene*>(scene())->getSelectPens())
+        {
+            painter->setPen(selectPen);
+            painter->drawPath(shape());
+        }
 
-        QPen selectPen2(Qt::white);
-        selectPen2.setDashOffset(2);
-        selectPen2.setDashPattern(QVector<qreal>({2,4}));
-        selectPen2.setCosmetic(true);
-
-        painter->setPen(selectPen1);
-        painter->drawPath(shape());
-        painter->setPen(selectPen2);
-        painter->drawPath(shape());
     }
 
 }

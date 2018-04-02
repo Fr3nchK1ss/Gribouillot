@@ -485,10 +485,10 @@ void Gribouillot::openProject(QString gribFile)
 
 
         //Restore drawing color and drawing width
-        drawingColor = settings.value("drawing/color").value<QColor>();
+        drawingColor = settings.value("drawing/color", QColor(Qt::black)).value<QColor>();
         setColorIcon(drawingColor);
 
-        drawingWidth = settings.value("drawing/width").toInt();
+        drawingWidth = settings.value("drawing/width", 5).toInt();
         QString iconString = ":/Resources/Icons/draw-width-"
                             +QString::number(drawingWidth)
                             +".png";
@@ -499,7 +499,7 @@ void Gribouillot::openProject(QString gribFile)
         for (int i = 0; i < QColorDialog::customCount(); ++i)
         {
             QColorDialog::setCustomColor(i,
-                settings.value("customColor/color"+QString::number(i)).value<QColor>());
+                settings.value("customColor/color"+QString::number(i), QColor(Qt::white)).value<QColor>());
         }
 
 
@@ -716,6 +716,12 @@ void Gribouillot::on_actionNewProject_triggered()
  */
 void Gribouillot::on_actionOpenProject_triggered()
 {
+    /*
+     * Note: getOpenFileName will trigger a Gtk warning message on Gtk UI:
+     * "GtkDialog mapped without a transient parent. This is discouraged."
+     * This is because Qt source calls a native Gtk window and Gtk can't have
+     * a Qt class as parent... Can't be fixed, must be ignored.
+     */
     QString gribFile = QFileDialog::getOpenFileName(this,
                                                     tr("Open an existing project"),
                                                     (QDir::currentPath())+"/..",

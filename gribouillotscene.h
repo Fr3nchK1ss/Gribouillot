@@ -25,6 +25,7 @@ public:
     ~GribouillotScene(){}
 
     void disableItemsSpecifics();
+    QVector<QPen> getSelectPens();
 
 signals:
     void newMouseClickPreSelect(QPointF);
@@ -39,6 +40,9 @@ protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent *e) Q_DECL_OVERRIDE;
+
+private:
+    QVector<QPen> selectPens;
 
 };
 
