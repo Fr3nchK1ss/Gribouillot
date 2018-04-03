@@ -84,7 +84,7 @@ private:
     void createPlusTab();
     void restrictToolbar();
     void fullToolbar();
-    void enableItemsAndSpecifics(GribouillotLayer* layer);
+    void enableItems(GribouillotLayer* layer);
     void setColorIcon(QColor color);
     void clearView();
     void setDrawingView();
@@ -99,10 +99,6 @@ private:
     void loadBackgroundMap(QString path);
     void addNewLayer(QString path = "");
     void saveLayersOrder();
-
-    //scaleRuler
-    Item_scaleRuler *scaleRuler;
-    void initScaleRuler();
 
 private slots:
     //Menu actions
@@ -127,7 +123,7 @@ private slots:
     void acceptGpsDialog();
     void hideGpsDialog();
 
-    void scaleRulerTlBttToggled(bool checked);
+    void scaleRulerTlBttTriggered();
 
     //React to change in tabs selection
     void tabWidgetClicked(int newTabIndex);
@@ -166,7 +162,7 @@ private slots:
     void on_actionChooseColor_triggered();
     void on_actionChooseWidth_triggered();
 
-    void on_actionMeasureDistance_toggled(bool isChecked);
+    void on_actionMeasureDistance_triggered();
     void measureDistance(qreal distance);
 
     void on_actionPointWeight_toggled(bool isChecked);

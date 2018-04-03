@@ -41,7 +41,9 @@ enum GribouillotItem {
                       SPIRAL = QGraphicsItem::UserType + 40,
                       SPIRAL_DRAWER = QGraphicsItem::UserType + 41,
 
-                      PIXMAP = QGraphicsItem::UserType + 50
+                      PIXMAP = QGraphicsItem::UserType + 50,
+
+                      SCALERULER = QGraphicsItem::UserType + 60
                      };
 
 

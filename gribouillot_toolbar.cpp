@@ -640,9 +640,9 @@ void Gribouillot::sceneSelectionChanged() const
             else
                 statusMsg = tr("Angle between the 2 lines: ")
                             +QString::number(angle, 'g', 4)
-                            +tr("/")
+                            +tr("° / ")
                             +QString::number((qreal)180-angle, 'g', 4)
-                            +tr(" degrees");
+                            +tr("°");
 
             if ( gpsEnabled &&
                  line1.intersect(line2,&iPoint) != QLineF::NoIntersection)
@@ -729,12 +729,13 @@ void Gribouillot::visualHelp_lineFromAngle(Item_pointOnRail* pOR)
  */
 void Gribouillot::on_actionCursorSelect_triggered()
 {
+    clearView();
     currentDrawing = NONE;
     statusBar()->clearMessage();
 
     //Items can be selected
     if (currentLayer != nullptr)
-        enableItemsAndSpecifics(currentLayer);
+        enableItems(currentLayer);
 
     setCursor(Qt::ArrowCursor);
     ui->zGraphicsView->setCursor(Qt::ArrowCursor);//necessary
@@ -748,6 +749,7 @@ void Gribouillot::on_actionCursorSelect_triggered()
  */
 void Gribouillot::on_actionCursorDrag_triggered()
 {
+    clearView();
     currentDrawing = NONE;
     statusBar()->clearMessage();
 
@@ -769,7 +771,6 @@ void Gribouillot::on_actionCursorDrag_triggered()
 void Gribouillot::on_actionChooseColor_triggered()
 {
     //if at least one item from the current layer is selected, change color of selected items.
-
     if(!currentLayer->selectedItems().isEmpty())
     {
         const QColor color = QColorDialog::getColor(drawingColor,
@@ -839,17 +840,18 @@ void Gribouillot::on_actionChooseWidth_triggered()
 /**
  * @brief   measuring tape in kilometers
  */
-void Gribouillot::on_actionMeasureDistance_toggled(bool isChecked)
+void Gribouillot::on_actionMeasureDistance_triggered()
 {
-    if (isChecked)
-    {
-        currentDrawing = NONE;
-        statusBar()->showMessage(tr("Measure a distance."));
-        initScaleRuler();
+        setDrawingView();
+        currentDrawing = SCALERULER;
+
+        Item_scaleRuler* scaleRuler = new Item_scaleRuler();
         connect(scaleRuler, SIGNAL(newMeasure(qreal)),this, SLOT(measureDistance(qreal)));
-    }
-    else
-        scene->removeItem(scaleRuler);
+        scene->addItem(scaleRuler);
+        scaleRuler->grabMouse();
+
+        statusBar()->showMessage(tr("Measure a distance."));
+
 }
 
 /**

@@ -43,9 +43,7 @@ Gribouillot::Gribouillot(QWidget *parent) :
 
     drawingColor(Qt::black),
     drawingWidth(5),
-    currentDrawing(NONE),
-
-    scaleRuler(new Item_scaleRuler)
+    currentDrawing(NONE)
 
 {
     ui->setupUi(this);
@@ -61,7 +59,7 @@ Gribouillot::Gribouillot(QWidget *parent) :
     //mapTabWidget is an extension of the mainWindow and even a "friendly" Class.
     connect (ui->mapTabWidget->ui->mapTabNameTlBtt, SIGNAL(clicked()), this, SLOT(mapTabNameTlBttClicked()));
     connect (ui->mapTabWidget->ui->blackWhiteTlBtt, SIGNAL(toggled(bool)), this, SLOT(blackWhiteTlBttClicked(bool)));
-    connect (ui->mapTabWidget->ui->scaleRulerTlBtt, SIGNAL(toggled(bool)), this, SLOT(scaleRulerTlBttToggled(bool)));
+    connect (ui->mapTabWidget->ui->scaleRulerTlBtt, SIGNAL(clicked()), this, SLOT(scaleRulerTlBttTriggered()));
     connect (ui->mapTabWidget->ui->gpsTlBtt, SIGNAL(clicked()), this, SLOT(gpsTlBttClicked()));
 
     //The spiral dialog is an extension of the interface which is shown/hidden if necessary
@@ -198,25 +196,25 @@ void Gribouillot::fullToolbar()
 
 
 /**
- * @brief   Enable all items (from all layers) and the specifics of the items
- *          which belong to the given 'layer'.
+ * @brief   Enable all items from ALL layers, with additional actions if
+ *          the items belong to the given 'layer' or not.
  */
-void Gribouillot::enableItemsAndSpecifics(GribouillotLayer* layer)
+void Gribouillot::enableItems(GribouillotLayer* layer)
 {
-    bool specifics;
+    bool belongsToLayer;
 
     foreach(QGraphicsItem* item, scene->items())
     {
-        specifics = layer->contains(item) ? true : false;
+        belongsToLayer = layer->contains(item) ? true : false;
 
         //enable item
         item->setEnabled(true);
 
         //enable or not specifics
         if( item->type() == PIXMAP )
-            item->setFlag(QGraphicsItem::ItemIsMovable, specifics);
+            item->setFlag(QGraphicsItem::ItemIsMovable, belongsToLayer);
         if ( item->type() == SPIRAL)
-            item->setEnabled(specifics);
+            item->setEnabled(belongsToLayer);
         //to complete if necessary
     }
 }
@@ -240,22 +238,23 @@ void Gribouillot::clearView()
 {
     if(currentDrawing != NONE)
     {
-        /*
-         * Remove any "drawing help" item if the drawingView is
-         * re-triggered or unchecked.
-         */
+
+        //Clear any temporary graphic item: drawing help, etc
         foreach(QGraphicsItem* item, scene->items())
         {
             if(item->type() == ARC_DRAWER
                || item->type() == POINT_ONRAIL
-               || item->type() == SPIRAL_DRAWER )
+               || item->type() == SPIRAL_DRAWER
+               || item->type() == SCALERULER)
             {
+                //qDebug() << "clear: " << item;
                 scene->removeItem(item);
                 delete item;
             }
         }
 
-        drawingCoords.clear();//vector to store drawing positions
+        //Clear vector used to store drawing positions
+        drawingCoords.clear();
     }
 
     //scene->clearSelection();
@@ -283,7 +282,6 @@ void Gribouillot::setDrawingView()
  */
 void Gribouillot::setSelectionView()
 {
-    clearView();
     /*
      * It is not possible to manually check an action of the drawingGroup
      * (see QActionGroup doc), EXCEPT when not one action is checked yet;
@@ -303,10 +301,11 @@ void Gribouillot::setSelectionView()
  */
 void Gribouillot::uncheckDrawingGroup()
 {
+
     if (drawingGroup->checkedAction() != 0)
     {
         /**
-         *  An exclusive actionGroup does not allow for manual checking/
+         *  An 'exclusive' actionGroup does not allow for manual checking/
          *  unchecking, so we need to setExclusive(false) first.
          */
         drawingGroup->setExclusive(false);
@@ -1017,43 +1016,21 @@ void Gribouillot::blackWhiteTlBttClicked(bool isChecked)
 
 
 /**
- * @brief   use a scaleRuler item to set the internal km/px ratio
+ * @brief   use a measuring tape to set the internal km/px ratio
  */
-void Gribouillot::scaleRulerTlBttToggled(bool checked)
+void Gribouillot::scaleRulerTlBttTriggered()
 {
-    if (checked)
-    {
-        uncheckDrawingGroup();
-        initScaleRuler();
-        connect(scaleRuler, SIGNAL(newMeasure(qreal)),ui->mapTabWidget, SLOT(newScaleMeasure(double)));
-    }
-    else
-        scene->removeItem(scaleRuler);
-
-}
-
-
-/**
- * @brief   Init the scaleRuler to set the scale or measure a distance
- * @details Called by scaleRulerTlBttClicked() and on_actionMeasureDistance_triggered()
- */
-void Gribouillot::initScaleRuler()
-{
-    //disconnect any previous signal
-    disconnect(scaleRuler, SIGNAL(newMeasure(qreal)),0, 0);
-    //reset position and drawing counter
-    scaleRuler->reset();
-    //addItem instead of just show/hide so the ruler is always displayed on top
-    scene->addItem(scaleRuler);
-    /*
-     * Grab the mouse to receive events directly, no need to set currentDrawing.
-     * See item_scaleRuler protected functions (mousePressEvent...) for more details.
-     */
-    scaleRuler->grabMouse();
-
+    uncheckDrawingGroup();
     setDrawingView();
+    currentDrawing = SCALERULER;
+
+    Item_scaleRuler* scaleRuler = new Item_scaleRuler();
+    connect(scaleRuler, SIGNAL(newMeasure(qreal)),ui->mapTabWidget, SLOT(newScaleMeasure(double)));
+    scene->addItem(scaleRuler);
+    scaleRuler->grabMouse();//to respond to mouse clicks
 
 }
+
 
 
 /**
@@ -1170,9 +1147,9 @@ void Gribouillot::tabPageChanged(int newTabIndex)
         default:
             //A layer is displayed
 
-            /* enable items and specifics for the current layer */
+            //enable all scene items, with special actions for items of the current layer
             currentLayer = dynamic_cast<GribouillotLayer *>(ui->tabWidget->currentWidget());
-            enableItemsAndSpecifics(currentLayer);
+            enableItems(currentLayer);
 
             fullToolbar();
     }
@@ -1234,3 +1211,4 @@ void Gribouillot::doAddItemToScene(QGraphicsItem* item)
 {
     scene->addItem(item);
 }
+

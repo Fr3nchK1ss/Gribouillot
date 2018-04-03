@@ -39,20 +39,18 @@ void Item_scaleRuler::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     if (remainingClicks == 2)
     {
+        //Set the starting point of the ruler
         origin = event->scenePos();
         setLine(origin.x(),origin.y(),origin.x(),origin.y());
 
-    }
-    //else if (remainingClicks == 1) the scaleRuler drawing is done.
-    else if (remainingClicks == 0)
-    {
-        //We reset the scaleRuler
-        origin = event->scenePos();
-        setLine(origin.x(),origin.y(),origin.x(),origin.y());
-        remainingClicks = 2;
     }
 
     remainingClicks--;
+
+    if (remainingClicks == 0)
+        //reset to allow for a new drawing
+        remainingClicks = 2;
+
 }
 
 
