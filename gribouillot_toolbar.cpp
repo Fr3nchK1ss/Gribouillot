@@ -46,7 +46,7 @@ void Gribouillot::newSceneClickPreSelect(QPointF position)
     QPointF noCenter(-10000, -10000);
     QPointF center = noCenter;
 
-    //Some visual helps are 'self-drawing' items catching the mouse
+    //Some visual helps catch the mouse
     QGraphicsItem* mG = scene->mouseGrabberItem();
 
     switch (currentDrawing)
@@ -122,7 +122,7 @@ void Gribouillot::newSceneClickPreSelect(QPointF position)
                 /*
                  * Unlike other figures, a spiral can be drawn with a variable number of
                  * clicks. Also the drawing ends directly by a signal from the helper,
-                 * when the user presses [Enter] or reaches the maximum number of 4 clicks.
+                 * when the user presses [Enter], or after a maximum of 4 clicks.
                  */
                 connect(helper, &Item_spiralDrawer::endDrawing, this, &Gribouillot::finalizeSpiral);
 
@@ -801,6 +801,11 @@ void Gribouillot::on_actionChooseColor_triggered()
                     Item_arc* a = qgraphicsitem_cast<Item_arc*>(item);
                     a->newPen(color, a->pen().width());
                 }
+                else if (item->type() == SPIRAL)
+                {
+                    Item_spiral* s = qgraphicsitem_cast<Item_spiral*>(item);
+                    s->newPen(color, s->pen().width());
+                }
 
              }
         }
@@ -1217,7 +1222,7 @@ void Gribouillot::finalizeSpiral(QString errorMsg)
                     currentLayer->drawSegment(drawingColor, drawingWidth, baseSide);
         }
     }
-    else if(errorMsg == tr("aborted"))
+    else if(errorMsg == "aborted")
     {
         ;//drawing aborted by user action, no warning messageBox
     }

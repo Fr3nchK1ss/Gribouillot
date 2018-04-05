@@ -224,8 +224,6 @@ void GribouillotLayer::loadXML(QString path)
         QColor color = QColor(p.attribute("color"));
         int width = p.attribute("penWidth").toInt();
         int weight = p.attribute("weight").toInt();
-        /**qDebug()<<"X: "<<x<<" Y: "<<y<<" width: "<<width<<
-                  " color: " <<color.name() << " weight: " << weight;*/
 
         drawPoint(color, width, QPointF(x, y), weight);
     }
@@ -324,12 +322,14 @@ void GribouillotLayer::loadXML(QString path)
     for (int i=0; i < pixmaps.size();  ++i)
     {
         QDomElement p = pixmaps.item(i).toElement();
+        QString imagePath = p.attribute("imagePath");
         qreal x = p.attribute("x").toDouble();
         qreal y = p.attribute("y").toDouble();
         qreal scale = p.attribute("scale").toDouble();
-        QString imagePath = p.attribute("imagePath");
+        qreal rotation = p.attribute("rotation").toDouble();
 
-        addItemToLayer(new Item_pixmap(imagePath, QPointF(x, y), scale));
+
+        addItemToLayer(new Item_pixmap(imagePath, QPointF(x, y), scale, rotation));
     }
 
     return;
@@ -598,8 +598,7 @@ void GribouillotLayer::drawPoint(QColor penColor, int penWidth, QPointF position
  */
 void GribouillotLayer::drawPoint(QColor penColor, int penWidth, QPointF position, int weight)
 {
-    Item_point* point = new Item_point(penColor, penWidth, position, weight);
-    addItemToLayer(point);
+    addItemToLayer(new Item_point(penColor, penWidth, position, weight));
 }
 
 

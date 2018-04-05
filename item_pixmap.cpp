@@ -7,25 +7,30 @@
  *  @copyright GNU Public License v3
  */
 
+#include <cmath>
+
 #include <QDebug>
 #include <QGuiApplication>
 #include <QKeyEvent>
 #include <QPixmap>
+
 #include "item_pixmap.h"
 
 
-Item_pixmap::Item_pixmap(QString path, QPointF position, qreal scale):
-    QGraphicsPixmapItem(QPixmap(path))
+Item_pixmap::Item_pixmap(QString path, QPointF position, qreal scale, qreal rotation):
+    QGraphicsPixmapItem(QPixmap(path)),
+    imagePath(path),
+    rotationAngle(rotation)
 {
     QPointF center(pixmap().width()/2, pixmap().height()/2);
 
     setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIsFocusable);
-    imagePath = path;
-    setPos(position);
-    setScale(scale);
 
     setTransformOriginPoint(center);
+    setPos(position);
+    setScale(scale);
+    setRotation(rotationAngle);
 }
 
 
@@ -35,6 +40,7 @@ void Item_pixmap::serialize2xml(QXmlStreamWriter *w)
     w->writeAttribute("x", QString::number(x()));
     w->writeAttribute("y", QString::number(y()));
     w->writeAttribute("scale", QString::number(scale()));
+    w->writeAttribute("rotation", QString::number(rotationAngle));
     w->writeAttribute("imagePath", imagePath);
     w->writeEndElement();
 
@@ -46,20 +52,10 @@ void Item_pixmap::serialize2xml(QXmlStreamWriter *w)
  */
 QString Item_pixmap::status()
 {
-    QString zoomFactor;
-    if ( plusFactor == 1.0204)
-        zoomFactor = "+++";
-    else if ( plusFactor == 1.005)
-        zoomFactor = "++";
-    else
-        zoomFactor = "+";
-
     return QObject::tr("File: ")+imagePath
            +QObject::tr("  Scale: ")+QString::number(scale(), 'f', 2)
-           +QObject::tr("  Rotation: ")
-           +QString::number(rotationAngle, 'f', 1)+"°"
-           +QObject::tr("  Zoom factor: ")+zoomFactor
-            ;
+           +QObject::tr("  Rotation: ")+QString::number(fmod(rotationAngle,360), 'f', 1)+"°"
+           +QObject::tr("  Zoom factor: ")+QString::number(zoomFactor);
 
 }
 
@@ -91,7 +87,7 @@ QVariant Item_pixmap::itemChange(GraphicsItemChange change, const QVariant &valu
  */
 void Item_pixmap::keyPressEvent(QKeyEvent *event)
 {
-    if (event->modifiers() & Qt::ControlModifier)
+    if (event->modifiers() & Qt::ShiftModifier)
     {
         switch ( event->key() )
         {
@@ -121,26 +117,23 @@ void Item_pixmap::keyPressEvent(QKeyEvent *event)
                 break;
 
             case Qt::Key_Plus:
-                setScale( scale() * plusFactor );
+                setScale( scale() * zoomFactor );
                 break;
 
             case Qt::Key_Minus:
-                setScale( scale() * minusFactor );
+                setScale( scale() * (2-zoomFactor) );
                 break;
 
-            case Qt::Key_3:
-                plusFactor = 1.0204;
-                minusFactor = 0.98;
-                break;
-
-            case Qt::Key_2:
-                plusFactor = 1.005;//**.995 = 0.999975
-                minusFactor = 0.995;
+            case Qt::Key_0:
+                zoomFactor = 1.0204;
                 break;
 
             case Qt::Key_1:
-                plusFactor = 1.0005;//**.995 = 0.999999
-                minusFactor = 0.9995;
+                zoomFactor = 1.005;
+                break;
+
+            case Qt::Key_2:
+                zoomFactor = 1.0005;
                 break;
 
 
@@ -150,7 +143,7 @@ void Item_pixmap::keyPressEvent(QKeyEvent *event)
         }
     }
 
-    //Force status bar update
+    //Hack to force status bar update
     setSelected(false);
     setSelected(true);
 
@@ -170,12 +163,15 @@ void Item_pixmap::wheelEvent(QGraphicsSceneWheelEvent *event)
          * 0.9604 * 0.98 = 0.941192
          * 0.98 * 1.0204 = 0.999992
          */
-        qreal factor = (event->delta() < 0 ? minusFactor : plusFactor);
+        qreal factor = (event->delta() < 0 ? 2-zoomFactor : zoomFactor);
 
         setScale( scale() * factor );
 
         event->accept();
 
+        //Hack to force status bar update
+        setSelected(false);
+        setSelected(true);
     }
     else
         QGraphicsPixmapItem::wheelEvent(event);

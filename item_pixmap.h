@@ -28,7 +28,7 @@ public:
         // Enable the use of qgraphicsitem_cast with this item.
         return PIXMAP;
     }
-    explicit Item_pixmap(QString path, QPointF position = QPointF(), qreal scale = 1);
+    explicit Item_pixmap(QString path, QPointF position = QPointF(), qreal scale = 1, qreal rotation = 0);
     ~Item_pixmap(){}
 
     void setPath(QString path);
@@ -42,9 +42,8 @@ protected:
 
 private:
     QString imagePath;
-    qreal rotationAngle = 0;
-    qreal plusFactor = 1.0204;
-    qreal minusFactor = 0.98;
+    qreal rotationAngle;
+    qreal zoomFactor = 1.0204;
 
 };
 
