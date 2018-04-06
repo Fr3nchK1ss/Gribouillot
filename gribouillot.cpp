@@ -121,12 +121,9 @@ Gribouillot::Gribouillot(QWidget *parent) :
     ui->toolBar->setEnabled(false);
     ui->centralwidget->setEnabled(false);
 
-    ui->mapTabWidget->ui->gpsTlBtt->setVisible(false);//DEV
-    ui->actionMeasureAngle->setVisible(false);//DEV
-
     show();
 
-    openProject("/home/tyler/Grib/The Big Project/The Big Project.grib");//DEV
+    openProject("/home/tyler/Grib/test3/test3.grib");//DEV
 
 }
 
@@ -423,7 +420,6 @@ void Gribouillot::openProject(QString gribFile)
         QFileInfo gribFileInfo = QFileInfo(gribFile);
         QString notFound ="";
 
-
         initProject();
 
         QDir::setCurrent(gribFileInfo.absolutePath());
@@ -432,10 +428,8 @@ void Gribouillot::openProject(QString gribFile)
 
         QSettings settings(gribFile, QSettings::IniFormat);
 
-
         //Restore background map
-        mapPath = settings.value("map/mapPath").toString();
-        mapTabName = settings.value("map/mapTabName").toString();
+        mapPath = settings.value("map/mapPath", "").toString();
         QFileInfo mapFileInfo = QFileInfo(mapPath);
 
         /* verify that mapPath is valid, the project folder may have
@@ -443,25 +437,19 @@ void Gribouillot::openProject(QString gribFile)
          */
         if ( !mapFileInfo.exists() )
         {
-            //map may still exists in the current dir though
+            //map may still exist in the current dir
             QString possibleLocalFile = QDir::currentPath()+"/"+mapFileInfo.fileName();
 
             if ( QFile::exists(possibleLocalFile) )
-            {
-                //ok, change mapPath to current path
-                mapPath = QDir::currentPath()+"/"+mapFileInfo.fileName();
-            }
+                mapPath = possibleLocalFile;
             else
             {
                 //can't find map file in the current Dir, ask user
                 dlg_changeMap dialog(mapPath, this);
                 if (dialog.exec() == QDialog::Accepted)
-                {
                     mapPath = dialog.getMapPath();
-                    mapTabName = QFileInfo(mapPath).baseName();
-                }
                 else
-                    mapPath = QString();//empty
+                    mapPath = QString();//left empty by user
             }
         }
 
@@ -469,18 +457,19 @@ void Gribouillot::openProject(QString gribFile)
         {
             loadBackgroundMap(mapPath);
 
-            if (!mapTabName.isEmpty())
-            {
-                ui->tabWidget->setTabText(0, mapTabName);
-                ui->tabWidget->setTabToolTip(0, mapPath);
-            }
+            mapTabName = settings.value("map/mapTabName", "").toString();
+            if (mapTabName.isEmpty())
+                mapTabName = QFileInfo(mapPath).baseName();
+
+            ui->tabWidget->setTabText(0, mapTabName);
+            ui->tabWidget->setTabToolTip(0, mapPath);
         }
         else
             //Load project without a background map
-            QMessageBox::warning(this,
-                                 currentProjectName,
-                                 tr("No background map selected!"),
-                                 QMessageBox::Ok);
+            QMessageBox::information(this,
+                                    currentProjectName,
+                                    tr("Starting without background map."),
+                                    QMessageBox::Ok);
 
 
         //Restore drawing color and drawing width
@@ -504,9 +493,9 @@ void Gribouillot::openProject(QString gribFile)
 
         //Restore scale spinBoxes.
         //NOTE: setting new SpinBox values automatically triggers a new scale computation.
-        ui->mapTabWidget->ui->pxSpinBox->setValue(settings.value("scale/pxSpinBx").toDouble());
-        ui->mapTabWidget->ui->kmSpinBox->setValue(settings.value("scale/kmSpinBx").toDouble());
-        ui->mapTabWidget->ui->mKmComboBox->setCurrentIndex(settings.value("scale/mkmUnit").toInt());
+        ui->mapTabWidget->ui->pxSpinBox->setValue(settings.value("scale/pxSpinBx", 0).toDouble());
+        ui->mapTabWidget->ui->kmSpinBox->setValue(settings.value("scale/kmSpinBx", 0).toDouble());
+        ui->mapTabWidget->ui->mKmComboBox->setCurrentIndex(settings.value("scale/mkmUnit", 0).toInt());
 
 
         /*
@@ -534,11 +523,11 @@ void Gribouillot::openProject(QString gribFile)
         }
 
 
-        //Restore spiral dialog settings TODO: project independent setting
+        //Restore spiral dialog settings
         settings.beginGroup("spiral");
-        spiralDialog->loadData( settings.value("constructAsOneItem").toBool(),
-                                settings.value("baseDisplay").toBool(),
-                                settings.value("showBaseCentersOnly").toBool());
+        spiralDialog->loadData( settings.value("constructAsOneItem", true).toBool(),
+                                settings.value("baseDisplay", false).toBool(),
+                                settings.value("showBaseCentersOnly", true).toBool());
         settings.endGroup();
 
 

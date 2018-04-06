@@ -49,9 +49,12 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_4">
       <item>
-       <widget class="QRadioButton" name="draw4Arcs">
+       <widget class="QRadioButton" name="draw1Item">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="text">
-         <string>Construct as 4 independent arcs.</string>
+         <string>Construct as one selectable item.</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -59,12 +62,12 @@
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="draw1Item">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
+       <widget class="QRadioButton" name="draw4Arcs">
         <property name="text">
-         <string>Construct as one selectable item.</string>
+         <string>Construct as 4 independent arcs.</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
         </property>
        </widget>
       </item>

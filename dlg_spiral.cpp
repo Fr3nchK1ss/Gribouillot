@@ -28,11 +28,11 @@ Dlg_spiral::~Dlg_spiral()
 /**
  * @brief   load saved settings upon initialization
  */
-void Dlg_spiral::loadData(bool construct1Item, bool baseDisplay, bool centersOnlyBase)
+void Dlg_spiral::loadData(bool constructAs1Item, bool baseDisplay, bool centersOnlyBase)
 {
 
     //Construction method
-    if(construct1Item)
+    if(constructAs1Item)
         ui->draw1Item->setChecked(true);
     else
         ui->draw4Arcs->setChecked(true);

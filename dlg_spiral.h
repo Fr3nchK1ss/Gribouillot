@@ -17,7 +17,7 @@ public:
     explicit Dlg_spiral(QWidget *parent = 0);
     ~Dlg_spiral();
 
-    void loadData(bool construct1Item, bool baseDisplay, bool centersOnlyBase);
+    void loadData(bool constructAs1Item, bool baseDisplay, bool centersOnlyBase);
 
     bool isOneItem();
     bool isBaseDisplayed();
