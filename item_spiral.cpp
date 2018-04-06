@@ -68,10 +68,10 @@ void Item_spiral::newPen(QColor penColor, int penWidth)
 QString Item_spiral::status(qreal scale)
 {
     return QObject::tr("Spiral:  ")+
-           "side1 = "+QString::number(qAbs(baseSide[0].length())*scale, 'f', 2)+"km  "+
-           "side2 = "+QString::number(qAbs(baseSide[1].length())*scale, 'f', 2)+"km  "+
-           "side3 = "+QString::number(qAbs(baseSide[2].length())*scale, 'f', 2)+"km  "+
-           "side4 = "+QString::number(qAbs(baseSide[3].length())*scale, 'f', 2)+"km  ";
+           "side1 = "+QString::number(qAbs(baseSide[0].length())*scale, 'f', 1)+"km  "+
+           "side2 = "+QString::number(qAbs(baseSide[1].length())*scale, 'f', 1)+"km  "+
+           "side3 = "+QString::number(qAbs(baseSide[2].length())*scale, 'f', 1)+"km  "+
+           "side4 = "+QString::number(qAbs(baseSide[3].length())*scale, 'f', 1)+"km  ";
 
     return QString();
 }

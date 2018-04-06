@@ -123,7 +123,7 @@ Gribouillot::Gribouillot(QWidget *parent) :
 
     show();
 
-    openProject("/home/tyler/Grib/test3/test3.grib");//DEV
+    openProject("/home/tyler/Grib/The Big Project/The Big Project.grib");//DEV
 
 }
 
@@ -250,11 +250,10 @@ void Gribouillot::clearView()
             }
         }
 
-        //Clear vector used to store drawing positions
+        //Also reset vector used to store drawing positions
         drawingCoords.clear();
     }
 
-    //scene->clearSelection();
 }
 
 
@@ -265,9 +264,13 @@ void Gribouillot::clearView()
  */
 void Gribouillot::setDrawingView()
 {
+    qDebug() << "drawingview()";
     clearView();
 
     setCursor(Qt::ArrowCursor);//Main window cursor
+
+    //Hack because of bug using weighted points proxy widgets
+    ui->zGraphicsView->setDragMode(QGraphicsView::ScrollHandDrag);//hack
     ui->zGraphicsView->setCursor(drawingCursor);//GraphicsView cursor
     ui->zGraphicsView->setDragMode(QGraphicsView::NoDrag);
 }

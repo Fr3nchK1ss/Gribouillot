@@ -304,7 +304,7 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
             break;
 
         case ARC_FROMCIRCLE:
-            if ( mG == nullptr || mG->type() != ARC_DRAWER )
+            if ( mG == nullptr )
             {
                 if ( isOnlySelected({CIRCLE},1) )
                     visualHelp_arcFromCircle();//mouse grabbed
@@ -729,18 +729,17 @@ void Gribouillot::visualHelp_lineFromAngle(Item_pointOnRail* pOR)
  */
 void Gribouillot::on_actionCursorSelect_triggered()
 {
+    statusBar()->clearMessage();
     clearView();
     currentDrawing = NONE;
-    statusBar()->clearMessage();
 
     //Items can be selected
     if (currentLayer != nullptr)
         enableItems(currentLayer);
 
     setCursor(Qt::ArrowCursor);
-    ui->zGraphicsView->setCursor(Qt::ArrowCursor);//necessary
+    ui->zGraphicsView->setCursor(Qt::ArrowCursor);
     ui->zGraphicsView->setDragMode(QGraphicsView::RubberBandDrag);
-
 }
 
 
@@ -749,9 +748,9 @@ void Gribouillot::on_actionCursorSelect_triggered()
  */
 void Gribouillot::on_actionCursorDrag_triggered()
 {
+    statusBar()->clearMessage();
     clearView();
     currentDrawing = NONE;
-    statusBar()->clearMessage();
 
     //Items can not be selected in Drag mode
     foreach(QGraphicsItem* item, scene->items())
@@ -805,6 +804,7 @@ void Gribouillot::on_actionChooseColor_triggered()
                 {
                     Item_spiral* s = qgraphicsitem_cast<Item_spiral*>(item);
                     s->newPen(color, s->pen().width());
+
                 }
 
              }
@@ -1014,14 +1014,7 @@ void Gribouillot::on_actionAngleLine_triggered()
                   tr("Angle: pick up the center of the angle"),
                   tr("Angle: click to draw.")};
 
-    if( isOnlySelected({SEGMENT, LINE}, 1) )
-    {
-        ui->zGraphicsView->setCursor(Qt::BlankCursor);
-        visualHelp_pointOnRail();
-        statusBar()->showMessage(drawingTips[1]);
-    }
-    else
-        statusBar()->showMessage(drawingTips[0]);
+    statusBar()->showMessage(drawingTips[0]);
 
 }
 

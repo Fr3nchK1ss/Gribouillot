@@ -12,7 +12,7 @@ class Dlg_pointWeight : public QDialog
     Q_OBJECT
 
 public:
-    explicit Dlg_pointWeight(QWidget *parent = 0);
+    explicit Dlg_pointWeight(QWidget *parent = 0, int weight = 0);
     ~Dlg_pointWeight();
 
     int getWeightValue();

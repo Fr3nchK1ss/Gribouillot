@@ -84,7 +84,7 @@ QString Item_segment::status(qreal scale)
 {
     qreal kmLength = line().length()*scale;
 
-    return QObject::tr("Segment with length ")+QString::number(kmLength)+" km";
+    return QObject::tr("Segment with length ")+QString::number(kmLength, 'f', 1)+" km";
 
 }
 

@@ -149,8 +149,8 @@ void Item_point::keyPressEvent(QKeyEvent *event)
     {
         case Qt::Key_W:
             {
-                //static_cast blabla: to get the dialog centered in the view
-                Dlg_pointWeight dialog(static_cast<QWidget *>(this->scene()->views().at(0)) );
+                //static_cast blabla is to get the dialog centered in the view
+                Dlg_pointWeight dialog(static_cast<QWidget *>(this->scene()->views().at(0)), getWeight() );
                 if (dialog.exec() == QDialog::Accepted)
                     setWeight(dialog.getWeightValue());
 

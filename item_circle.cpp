@@ -66,8 +66,8 @@ QString Item_circle::status(qreal scale)
 {
     qreal kmRadius = rect().width()/2*scale;
 
-    return QObject::tr("Radius: ")+QString::number(kmRadius)+" km"
-            +QObject::tr("    Circumference: ")+QString::number(M_PI*kmRadius)+" km";
+    return QObject::tr("Radius: ")+QString::number(kmRadius, 'f', 1)+" km"
+            +QObject::tr("    Circumference: ")+QString::number(M_PI*kmRadius, 'f', 1)+" km";
 
 }
 
