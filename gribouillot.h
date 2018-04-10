@@ -57,7 +57,6 @@ private:
     //Tabpage variables
     GribouillotLayer *currentLayer;
     int currentTabIndex;
-    int callsForAChange;    
 
     //GPS variables
     Dlg_setupGps* gpsDialog;
@@ -84,7 +83,7 @@ private:
     void createPlusTab();
     void restrictToolbar();
     void fullToolbar();
-    void enableItems(GribouillotLayer* layer);
+    void setWorkingLayer(GribouillotLayer* layer);
     void setColorIcon(QColor color);
     void clearView();
     void setDrawingView();
@@ -127,7 +126,6 @@ private slots:
 
     //React to change in tabs selection
     void tabWidgetClicked(int newTabIndex);
-    void tabPageChanged(int newTabIndex);
 
     //React to signals from the current layer
     void doChangeLayerName(QString label);

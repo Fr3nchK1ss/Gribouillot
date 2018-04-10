@@ -733,9 +733,8 @@ void Gribouillot::on_actionCursorSelect_triggered()
     clearView();
     currentDrawing = NONE;
 
-    //Items can be selected
     if (currentLayer != nullptr)
-        enableItems(currentLayer);
+        setWorkingLayer(currentLayer);
 
     setCursor(Qt::ArrowCursor);
     ui->zGraphicsView->setCursor(Qt::ArrowCursor);

@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QTabWidget" name="tabWidget">
+     <widget class="SmartInsertTabWidget" name="tabWidget">
       <property name="maximumSize">
        <size>
         <width>16777215</width>
@@ -685,6 +685,12 @@
    <header>maptabwidget.h</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>SmartInsertTabWidget</class>
+   <extends>QTabWidget</extends>
+   <header>smartinserttabwidget.h</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
  <resources>
   <include location="gribouillot.qrc"/>
@@ -695,22 +701,6 @@
    <signal>tabBarClicked(int)</signal>
    <receiver>Gribouillot</receiver>
    <slot>tabWidgetClicked(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>383</x>
-     <y>137</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>399</x>
-     <y>299</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>tabWidget</sender>
-   <signal>currentChanged(int)</signal>
-   <receiver>Gribouillot</receiver>
-   <slot>tabPageChanged(int)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>383</x>

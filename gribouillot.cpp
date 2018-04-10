@@ -39,7 +39,6 @@ Gribouillot::Gribouillot(QWidget *parent) :
     backgroundMap(new QGraphicsPixmapItem),
 
     currentTabIndex(0),
-    callsForAChange(0),
 
     drawingColor(Qt::black),
     drawingWidth(5),
@@ -193,10 +192,11 @@ void Gribouillot::fullToolbar()
 
 
 /**
- * @brief   Enable all items from ALL layers, with additional actions if
- *          the items belong to the given 'layer' or not.
+ * @brief   Items from the working layer are fully activated.
+ * @details Items from other layers can only be selected as reference
+ *          items for drawing tools, but can't be deleted, moved, etc.
  */
-void Gribouillot::enableItems(GribouillotLayer* layer)
+void Gribouillot::setWorkingLayer(GribouillotLayer* layer)
 {
     bool belongsToLayer;
 
@@ -264,7 +264,6 @@ void Gribouillot::clearView()
  */
 void Gribouillot::setDrawingView()
 {
-    qDebug() << "drawingview()";
     clearView();
 
     setCursor(Qt::ArrowCursor);//Main window cursor
@@ -621,12 +620,15 @@ void Gribouillot::addNewLayer(QString path)
         newLayer = new GribouillotLayer(path, this);
     }
 
-    //Insert the new layer widget into the tabWidget UI.
+
+    //Insert the new layer widget after the currentTabIndex
     ui->tabWidget->insertTab(currentTabIndex+1,
                              newLayer,
+                             //QIcon(":/Resources/Icons/visibility.png"),
                              newLayer->getLabel());
 
-    ui->tabWidget->setCurrentWidget(newLayer);//tabPageChanged will be called
+    //tabWidget now displays the new tab, so update currentTabIndex
+    currentTabIndex+=1;
 
 }
 
@@ -1093,83 +1095,34 @@ void Gribouillot::tabWidgetClicked(int newTabIndex)
         if ( newTabIndex == -1 )
         {
             //qDebug() << "the +tab is clicked.";
-
-            /**
-             * Because of QTabBar event system, the tabWidget always switch to the last
-             * tab upon a new tab insertion, despite setCurrentWidget() in AddNewLayer.
-             * It is fine only if the new tab is inserted in last position. Otherwise we
-             * need to hack a bit with this 'callsForAChange'. See also tabPageChanged().
-             */
-            if ( ! (currentTabIndex == ui->tabWidget->count()-2) )
-            {
-                //qDebug() << "The new tab is not inserted in last position.";
-                callsForAChange = 2;//initialize the hack
-            }
             addNewLayer();
         }
-        //else
-            //A normal tab change occurs. It is handled in tabPageChanged().
-    }
-}
+        else
+        {
+            ui->tabWidget->setCurrentIndex(newTabIndex);
 
+            switch (newTabIndex)
+            {
+                case 0:
+                    //mapTab is displayed, disable items
+                    foreach( QGraphicsItem* item, scene->items())
+                        item->setEnabled(false);
 
-/**
- * @brief   The displayed tab has changed and currentTabIndex must be updated.
- * @details If a layer is now displayed, enable its graphical items for editing.
- */
-void Gribouillot::tabPageChanged(int newTabIndex)
-{
-    //qDebug() << "In tabPageChanged with newTabIndex: " << newTabIndex;
+                    restrictToolbar();
+                    break;
 
-    //Disengage points weights display
-    ui->actionPointWeight->setChecked(false);
+                default:
+                    //A layer is displayed, enable all items with respect to current layer
+                    currentLayer = dynamic_cast<GribouillotLayer *>(ui->tabWidget->widget(newTabIndex));
+                    setWorkingLayer(currentLayer);
 
-    switch (newTabIndex)
-    {
-        case 0:
-            //mapTab is displayed
+                    fullToolbar();
+            }
 
-            /* disable items */
-            foreach( QGraphicsItem* item, scene->items())
-                item->setEnabled(false);
-
-            restrictToolbar();
-            break;
-
-        default:
-            //A layer is displayed
-
-            //enable all scene items, with special actions for items of the current layer
-            currentLayer = dynamic_cast<GribouillotLayer *>(ui->tabWidget->currentWidget());
-            enableItems(currentLayer);
-
-            fullToolbar();
-    }
-
-    /**
-     * Forcing the display to the proper tab in the case of tab insertion.
-     * This is a HACK because of a bug (or feature?) in the Qt library
-     * The value of callsForAChange is either 0, 1 or 2.
-     */
-    switch (callsForAChange)
-    {
-        case 1:
-            --callsForAChange;
-            //qDebug() << "tabPageChanged was wrongfully called by QTabBar";
-            //qDebug() << "Forcing the display of the proper currentTabIndex \n{";
-            ui->tabWidget->setCurrentIndex(currentTabIndex);
-            //qDebug() << "}//forced";
-            break;
-
-        case 2:
-            //tabPageChanged is called a 1rst time from AddNewLayer(), decrease counter...
-            --callsForAChange;
-            //...and proceed normally to default:
-        default:
             currentTabIndex = newTabIndex;
+            //qDebug() << "currentTabIndex: " << newTabIndex;
+        }
     }
-
-    //qDebug() << "End of tabPageChanged, currentTabIndex updated to: " << currentTabIndex;
 }
 
 
