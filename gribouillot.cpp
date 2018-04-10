@@ -53,6 +53,7 @@ Gribouillot::Gribouillot(QWidget *parent) :
     //TabWidget
     ui->tabWidget->setTabText(0, tr("Background map"));
     ui->tabWidget->tabBar()->setSelectionBehaviorOnRemove(QTabBar::SelectLeftTab);
+    connect(ui->tabWidget, &SmartInsertTabWidget::currentChanged, this, &Gribouillot::switchToTabIndex);
     createPlusTab();
 
     //mapTabWidget is an extension of the mainWindow and even a "friendly" Class.
@@ -198,22 +199,29 @@ void Gribouillot::fullToolbar()
  */
 void Gribouillot::setWorkingLayer(GribouillotLayer* layer)
 {
-    bool belongsToLayer;
-
-    foreach(QGraphicsItem* item, scene->items())
+    if( layer != nullptr )
     {
-        belongsToLayer = layer->contains(item) ? true : false;
+        bool belongsToLayer;
 
-        //enable item
-        item->setEnabled(true);
+        foreach(QGraphicsItem* item, scene->items())
+        {
+            belongsToLayer = layer->contains(item) ? true : false;
 
-        //enable or not specifics
-        if( item->type() == PIXMAP )
-            item->setFlag(QGraphicsItem::ItemIsMovable, belongsToLayer);
-        if ( item->type() == SPIRAL)
-            item->setEnabled(belongsToLayer);
-        //to complete if necessary
+            //enable item
+            item->setEnabled(true);
+
+            //enable or not specifics
+            if( item->type() == PIXMAP )
+                item->setFlag(QGraphicsItem::ItemIsMovable, belongsToLayer);
+            if ( item->type() == SPIRAL)
+                item->setEnabled(belongsToLayer);
+            //to complete if necessary
+        }
+
+        //As a working layer is defined, allow full toolBar
+        fullToolbar();
     }
+
 }
 
 
@@ -620,15 +628,12 @@ void Gribouillot::addNewLayer(QString path)
         newLayer = new GribouillotLayer(path, this);
     }
 
-
-    //Insert the new layer widget after the currentTabIndex
-    ui->tabWidget->insertTab(currentTabIndex+1,
-                             newLayer,
-                             //QIcon(":/Resources/Icons/visibility.png"),
-                             newLayer->getLabel());
-
-    //tabWidget now displays the new tab, so update currentTabIndex
-    currentTabIndex+=1;
+    //Insert the new layer after 'currentLayer' and make it the visible layer
+    currentTabIndex =   ui->tabWidget->insertAndDisplayTab(currentTabIndex+1,
+                                                           newLayer,
+                                                           newLayer->getLabel());
+    currentLayer = newLayer;
+    setWorkingLayer(currentLayer);
 
 }
 
@@ -1088,41 +1093,51 @@ void Gribouillot::hideGpsDialog()
  */
 void Gribouillot::tabWidgetClicked(int newTabIndex)
 {
-    //qDebug() << "In tabWidgetClicked";
+//    qDebug() << "In tabWidgetClicked";
 
     if ( newTabIndex != currentTabIndex )
     {
         if ( newTabIndex == -1 )
         {
-            //qDebug() << "the +tab is clicked.";
+//            qDebug() << "the +tab is clicked.";
             addNewLayer();
         }
         else
         {
-            ui->tabWidget->setCurrentIndex(newTabIndex);
-
-            switch (newTabIndex)
-            {
-                case 0:
-                    //mapTab is displayed, disable items
-                    foreach( QGraphicsItem* item, scene->items())
-                        item->setEnabled(false);
-
-                    restrictToolbar();
-                    break;
-
-                default:
-                    //A layer is displayed, enable all items with respect to current layer
-                    currentLayer = dynamic_cast<GribouillotLayer *>(ui->tabWidget->widget(newTabIndex));
-                    setWorkingLayer(currentLayer);
-
-                    fullToolbar();
-            }
-
-            currentTabIndex = newTabIndex;
-            //qDebug() << "currentTabIndex: " << newTabIndex;
+//            qDebug() << "other tab clicked.";
+            ui->tabWidget->setCurrentIndex(newTabIndex);//emits a currentChanged() signal
         }
+
     }
+}
+
+
+/**
+ * @brief Handle change of active tab. Connected to currentChanged() signal
+ *
+ */
+void Gribouillot::switchToTabIndex(int newTabIndex)
+{
+    switch (newTabIndex)
+    {
+        case 0:
+            //mapTab is displayed, disable items
+            foreach( QGraphicsItem* item, scene->items())
+                item->setEnabled(false);
+
+            restrictToolbar();
+            break;
+
+        default:
+            //A graphic layer is displayed, set up the working environment
+            currentLayer = dynamic_cast<GribouillotLayer *>(ui->tabWidget->widget(newTabIndex));
+            setWorkingLayer(currentLayer);
+
+    }
+
+    currentTabIndex = newTabIndex;
+//    qDebug() << "new currentTabIndex: " << newTabIndex;
+
 }
 
 
@@ -1142,11 +1157,11 @@ void Gribouillot::doChangeLayerName(QString label)
 void Gribouillot::doDeleteLayer()
 {
     GribouillotLayer* layerX = currentLayer;
-    ui->tabWidget->removeTab(currentTabIndex);
-    //After removeTab() we have currentLayer != layerX
-    delete layerX;
+    ui->tabWidget->removeTab(currentTabIndex);//emits a currentChanged() signal
+    delete layerX;//At this point currentLayer != layerX thanks to removeTab()
 
     saveLayersOrder();
+
 }
 
 /**

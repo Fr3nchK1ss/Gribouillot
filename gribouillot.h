@@ -126,6 +126,7 @@ private slots:
 
     //React to change in tabs selection
     void tabWidgetClicked(int newTabIndex);
+    void switchToTabIndex(int newTabIndex);
 
     //React to signals from the current layer
     void doChangeLayerName(QString label);
