@@ -51,9 +51,7 @@ Gribouillot::Gribouillot(QWidget *parent) :
     connect (ui->actionAbout_Qt, SIGNAL(triggered(bool)), qApp, SLOT(aboutQt()));
 
     //TabWidget
-    ui->tabWidget->setTabText(0, tr("Background map"));
-    ui->tabWidget->tabBar()->setSelectionBehaviorOnRemove(QTabBar::SelectLeftTab);
-    connect(ui->tabWidget, &SmartInsertTabWidget::currentChanged, this, &Gribouillot::switchToTabIndex);
+    connect(ui->gribTabWidget, &SmartInsertTabWidget::currentChanged, this, &Gribouillot::switchToTabIndex);
     createPlusTab();
 
     //mapTabWidget is an extension of the mainWindow and even a "friendly" Class.
@@ -156,10 +154,10 @@ void Gribouillot::closeEvent(QCloseEvent *event)
  */
 void Gribouillot::createPlusTab()
 {
-    ui->tabWidget->tabBar()->addTab(QIcon(":/Resources/Icons/add-layer.svg"), QString());
-    int plusTabIndex = ui->tabWidget->count() - 1;
-    ui->tabWidget->setTabEnabled(plusTabIndex, false);
-    ui->tabWidget->setTabToolTip(plusTabIndex, tr("Create new layer"));
+    ui->gribTabWidget->tabBar()->addTab(QIcon(":/Resources/Icons/add-layer.svg"), QString());
+    int plusTabIndex = ui->gribTabWidget->count() - 1;
+    ui->gribTabWidget->setTabEnabled(plusTabIndex, false);
+    ui->gribTabWidget->setTabToolTip(plusTabIndex, tr("Create new layer"));
 }
 
 /**
@@ -340,12 +338,12 @@ void Gribouillot::resetUI()
      * NB: This will call restrictToolbar() and select default cursor.
      * count()-2 and not just count() becoz mapTab and plusTab are no layers!
      */
-    int layersCount = ui->tabWidget->count()-2;//necessary, count() is modified in the for loop
+    int layersCount = ui->gribTabWidget->count()-2;//necessary, count() is modified in the for loop
     for (int i = 0; i < layersCount; ++i)
     {
         //widget(1) is different each time!
-        GribouillotLayer *layer = dynamic_cast<GribouillotLayer *>(ui->tabWidget->widget(1));
-        ui->tabWidget->removeTab(1);//modify ui->tabWidget->count()!
+        GribouillotLayer *layer = dynamic_cast<GribouillotLayer *>(ui->gribTabWidget->widget(1));
+        ui->gribTabWidget->removeTab(1);//modify ui->gribTabWidget->count()!
         delete layer;
     }
     GribouillotLayer::resetLayerIndex();
@@ -357,8 +355,8 @@ void Gribouillot::resetUI()
     //new empty background map
     backgroundMap = new QGraphicsPixmapItem();
     mapTabName = "";
-    ui->tabWidget->setTabText(0, "Map");
-    ui->tabWidget->setTabToolTip(0, "");
+    ui->gribTabWidget->setTabText(0, "Map");
+    ui->gribTabWidget->setTabToolTip(0, "");
 
     //reset GPS dialog
     delete gpsDialog; gpsDialog = nullptr;
@@ -471,8 +469,8 @@ void Gribouillot::openProject(QString gribFile)
             if (mapTabName.isEmpty())
                 mapTabName = QFileInfo(mapPath).baseName();
 
-            ui->tabWidget->setTabText(0, mapTabName);
-            ui->tabWidget->setTabToolTip(0, mapPath);
+            ui->gribTabWidget->setTabText(0, mapTabName);
+            ui->gribTabWidget->setTabToolTip(0, mapPath);
         }
         else
             //Load project without a background map
@@ -592,7 +590,7 @@ void Gribouillot::openProject(QString gribFile)
  */
 void Gribouillot::loadBackgroundMap(QString path)
 {
-    ui->tabWidget->setTabText(0, QDir(path).dirName());
+    ui->gribTabWidget->setTabText(0, QDir(path).dirName());
     backgroundMap->setPixmap(QPixmap(path));
 
     /** Limit the scrollable view to the background map*/
@@ -629,7 +627,7 @@ void Gribouillot::addNewLayer(QString path)
     }
 
     //Insert the new layer after 'currentLayer' and make it the visible layer
-    currentTabIndex =   ui->tabWidget->insertAndDisplayTab(currentTabIndex+1,
+    currentTabIndex =   ui->gribTabWidget->insertAndDisplayTab(currentTabIndex+1,
                                                            newLayer,
                                                            newLayer->getLabel());
     currentLayer = newLayer;
@@ -651,9 +649,9 @@ void Gribouillot::saveLayersOrder()
     settings.beginGroup("layersOrder");
         settings.remove("");
 
-        for (int i = 1; i < (ui->tabWidget->count() -1); ++i)
+        for (int i = 1; i < (ui->gribTabWidget->count() -1); ++i)
         {
-            GribouillotLayer *layer = dynamic_cast<GribouillotLayer *>(ui->tabWidget->widget(i));
+            GribouillotLayer *layer = dynamic_cast<GribouillotLayer *>(ui->gribTabWidget->widget(i));
             settings.setValue(QString::number(i), layer->getLabel());
         }
     settings.endGroup();
@@ -821,23 +819,23 @@ void Gribouillot::saveProject()
              * int i = 1  and not int i = 0    becoz the first tab is no layer (mapTab)
              * count() -1 and not just count() becoz the last tab is no layer (plusTab)
              */
-            for (int i = 1; i < (ui->tabWidget->count() -1); ++i)
+            for (int i = 1; i < (ui->gribTabWidget->count() -1); ++i)
             {
-                GribouillotLayer *layer = dynamic_cast<GribouillotLayer *>(ui->tabWidget->widget(i));
+                GribouillotLayer *layer = dynamic_cast<GribouillotLayer *>(ui->gribTabWidget->widget(i));
                 QString label = layer->getLabel();
 
                 if ( savedLabels.contains(label) )
                 {
                     //Two layers with the same label would write into the same file on disk!
-                    ui->tabWidget->setTabIcon(i,QIcon(QPixmap(":/Resources/Icons/exclamation.png")));
+                    ui->gribTabWidget->setTabIcon(i,QIcon(QPixmap(":/Resources/Icons/exclamation.png")));
                     QMessageBox::warning(this,
                              tr("Layer name conflict!"),
                              label+tr(": another layer was already saved under "
                              "this name, please change the name of the layer."),
                              QMessageBox::Ok);
                     label = layer->newLabel(true);//a dialog asks for new label
-                    ui->tabWidget->setTabIcon(i, QIcon());
-                    ui->tabWidget->setTabText(i, label);
+                    ui->gribTabWidget->setTabIcon(i, QIcon());
+                    ui->gribTabWidget->setTabText(i, label);
                     //At this point the layer has a new label, we can continue normally
                 }
 
@@ -980,8 +978,8 @@ void Gribouillot::mapTabNameTlBttClicked()
     if (!newName.isNull())
     {
         mapTabName = newName;
-        ui->tabWidget->setTabText(0, mapTabName);
-        ui->tabWidget->setTabToolTip(0, mapPath);
+        ui->gribTabWidget->setTabText(0, mapTabName);
+        ui->gribTabWidget->setTabToolTip(0, mapPath);
     }
 }
 
@@ -1105,7 +1103,7 @@ void Gribouillot::tabWidgetClicked(int newTabIndex)
         else
         {
 //            qDebug() << "other tab clicked.";
-            ui->tabWidget->setCurrentIndex(newTabIndex);//emits a currentChanged() signal
+            ui->gribTabWidget->setCurrentIndex(newTabIndex);//emits a currentChanged() signal
         }
 
     }
@@ -1130,7 +1128,7 @@ void Gribouillot::switchToTabIndex(int newTabIndex)
 
         default:
             //A graphic layer is displayed, set up the working environment
-            currentLayer = dynamic_cast<GribouillotLayer *>(ui->tabWidget->widget(newTabIndex));
+            currentLayer = dynamic_cast<GribouillotLayer *>(ui->gribTabWidget->widget(newTabIndex));
             setWorkingLayer(currentLayer);
 
     }
@@ -1146,7 +1144,7 @@ void Gribouillot::switchToTabIndex(int newTabIndex)
  */
 void Gribouillot::doChangeLayerName(QString label)
 {
-    ui->tabWidget->setTabText(currentTabIndex, label);
+    ui->gribTabWidget->setTabText(currentTabIndex, label);
 
 }
 
@@ -1157,7 +1155,7 @@ void Gribouillot::doChangeLayerName(QString label)
 void Gribouillot::doDeleteLayer()
 {
     GribouillotLayer* layerX = currentLayer;
-    ui->tabWidget->removeTab(currentTabIndex);//emits a currentChanged() signal
+    ui->gribTabWidget->removeTab(currentTabIndex);//emits a currentChanged() signal
     delete layerX;//At this point currentLayer != layerX thanks to removeTab()
 
     saveLayersOrder();

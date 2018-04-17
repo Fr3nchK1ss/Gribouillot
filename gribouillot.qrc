@@ -40,5 +40,7 @@
         <file>Resources/Icons/circle-radius-value.png</file>
         <file>Resources/Icons/circle-segment.png</file>
         <file>Resources/Icons/circle-2points-diameter.png</file>
+        <file>Resources/Icons/visibility-off.png</file>
+        <file>Resources/Icons/visibility-on.png</file>
     </qresource>
 </RCC>

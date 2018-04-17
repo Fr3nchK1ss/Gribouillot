@@ -26,7 +26,7 @@ void Gribouillot::newMoveOnScene(QPointF position)
 {
     if (ui->actionCursorSelect->isChecked() == true
         && gpsEnabled
-        && ui->tabWidget->currentIndex() == 0 )
+        && ui->gribTabWidget->currentIndex() == 0 )
     {
             statusBar()->showMessage(tr(" GPS coordinates : ")
                                  + gpsDialog->getFix(position));

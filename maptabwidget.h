@@ -25,7 +25,7 @@ class MapTabWidget;
  * @brief   MapTabWidget is the UI element which manages the background map
  * @details MapTabWidget should be designed in the Gribouillot::ui, but it is not possible with
  *          the current limitations of Qt-Designer. So MapTabWidget is the "promoted" QWidget of the
- *          Gribouillot::ui->tabWidget. Then Gribouillot is made "friendly" class to access the
+ *          Gribouillot::ui->gribTabWidget. Then Gribouillot is made "friendly" class to access the
  *          MapTabWidget::ui as an integral part of its interface.
  */
 class MapTabWidget : public QWidget

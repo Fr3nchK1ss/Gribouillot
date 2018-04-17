@@ -37,6 +37,7 @@ GribouillotLayer::GribouillotLayer(QMainWindow *parent) :
 {
     initLayer();
     label = "layer_"+QString::number(layer_index);
+
 }
 
 /**
@@ -74,16 +75,29 @@ void GribouillotLayer::initLayer()
     ui->setupUi(this);
     ++layer_index;
 
+    itemsVisibility = true;
+    visibilityBtt = new QPushButton(this);
+    visibilityBtt->setFlat(true);
+    visibilityBtt->setAttribute(Qt::WA_TranslucentBackground);
+    visibilityBtt->setIcon(QIcon(QPixmap(":/Resources/Icons/visibility-on.png")));
+
     //Connect the new layer to some mainWindow slots
     connect(this, SIGNAL(newLayerName(QString)), parent(), SLOT(doChangeLayerName(QString)));
     connect(this, SIGNAL(deleteLayer()), parent(), SLOT(doDeleteLayer()));
     connect(this, SIGNAL(addItemToScene(QGraphicsItem*)), parent(), SLOT(doAddItemToScene(QGraphicsItem*)));
+    connect(visibilityBtt, &QPushButton::clicked, this, &GribouillotLayer::toggleVisibility);
+
 }
 
 
 QString GribouillotLayer::getLabel()
 {
     return label;
+}
+
+QPushButton* GribouillotLayer::getVisibilityBtt()
+{
+    return visibilityBtt;
 }
 
 
@@ -503,8 +517,22 @@ void GribouillotLayer::on_visibilityCheckBox_stateChanged(int arg1)
 {
     bool isVisible = (arg1==0)? false : true;
 
+}
+
+
+void GribouillotLayer::toggleVisibility()
+{
+    itemsVisibility = !itemsVisibility;
+
+    if (itemsVisibility)
+        visibilityBtt->setIcon(QIcon(QPixmap(":/Resources/Icons/visibility-on.png")));
+    else
+        visibilityBtt->setIcon(QIcon(QPixmap(":/Resources/Icons/visibility-off.png")));
+
     for (int i = 0; i < itemsList.size(); ++i)
-        itemsList.at(i)->setVisible(isVisible);
+        itemsList.at(i)->setVisible(itemsVisibility);
+
+
 }
 
 /**

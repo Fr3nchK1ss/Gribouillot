@@ -7,26 +7,17 @@
  *  @copyright GNU Public License v3
  */
 
+#include <QAction>
 #include <QDebug>
+#include <QTabBar>
+#include <QPushButton>
 
 #include "smartinserttabwidget.h"
 
 SmartInsertTabWidget::SmartInsertTabWidget(QWidget *parent):
     QTabWidget(parent)
 {
-
 }
-
-
-/**
- * @brief rename insertTab to account for the overloaded tabInserted() hook.
- *
- */
-int SmartInsertTabWidget::insertAndDisplayTab(int index, QWidget *page, const QString &label)
-{
-    return insertTab(index, page, label);
-}
-
 
 
 /**

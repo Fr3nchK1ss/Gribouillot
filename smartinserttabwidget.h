@@ -19,8 +19,6 @@ class SmartInsertTabWidget : public QTabWidget
 public:
     explicit SmartInsertTabWidget(QWidget *parent);
 
-    int insertAndDisplayTab(int index, QWidget *page, const QString &label);
-
 
 protected:
     void tabInserted(int index) Q_DECL_OVERRIDE;

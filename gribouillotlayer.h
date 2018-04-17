@@ -13,6 +13,7 @@
 
 #include <QGraphicsItem>
 #include <QMainWindow>
+#include <QPushButton>
 
 #include "item_arc.h"
 #include "item_arcdrawer.h"
@@ -42,6 +43,7 @@ public:
 
     static void resetLayerIndex(){layer_index = 0;}
     QString getLabel();
+    QPushButton* getVisibilityBtt();
     QString newLabel(bool keepOldFile);
     QString askNewFile();
 
@@ -108,12 +110,15 @@ signals:
 private slots:
     void on_layerNameTlBtt_clicked();
     void on_visibilityCheckBox_stateChanged(int arg1);
+    void toggleVisibility();
     void on_opacitySlider_valueChanged(int value);
     void on_deleteLayerTlBtt_clicked();
 
 private:
     Ui::GribouillotLayer *ui;
     QString label;
+    QPushButton* visibilityBtt;
+    bool itemsVisibility;
     QList<QGraphicsItem *> itemsList;
 
     void initLayer();
