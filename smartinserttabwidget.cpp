@@ -10,7 +10,6 @@
 #include <QAction>
 #include <QDebug>
 #include <QTabBar>
-#include <QPushButton>
 
 #include "smartinserttabwidget.h"
 

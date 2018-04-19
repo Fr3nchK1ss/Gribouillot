@@ -3,11 +3,9 @@
         <file>Resources/Icons/image-x-generic.png</file>
         <file>Resources/Icons/tab-new.png</file>
         <file>Resources/Icons/visibility.png</file>
-        <file>Resources/Icons/delete-layer.svg</file>
         <file>Resources/Icons/black-white.png</file>
         <file>Resources/Icons/measure-tape-km.png</file>
         <file>Resources/Icons/measure-tape-px.png</file>
-        <file>Resources/Icons/add-layer.svg</file>
         <file>Resources/Icons/color-wheel.png</file>
         <file>Resources/Icons/line.png</file>
         <file>Resources/Icons/line-angle.png</file>
@@ -42,5 +40,7 @@
         <file>Resources/Icons/circle-2points-diameter.png</file>
         <file>Resources/Icons/visibility-off.png</file>
         <file>Resources/Icons/visibility-on.png</file>
+        <file>Resources/Icons/delete-layer.png</file>
+        <file>Resources/Icons/add-layer.png</file>
     </qresource>
 </RCC>

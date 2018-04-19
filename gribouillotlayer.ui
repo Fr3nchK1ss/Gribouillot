@@ -97,9 +97,8 @@
       <string/>
      </property>
      <property name="icon">
-      <iconset>
-       <normalon>:/Resources/Icons/delete-layer.svg</normalon>
-      </iconset>
+      <iconset resource="gribouillot.qrc">
+       <normaloff>:/Resources/Icons/delete-layer.png</normaloff>:/Resources/Icons/delete-layer.png</iconset>
      </property>
      <property name="iconSize">
       <size>
@@ -111,6 +110,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="gribouillot.qrc"/>
+ </resources>
  <connections/>
 </ui>

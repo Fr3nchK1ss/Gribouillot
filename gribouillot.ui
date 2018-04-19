@@ -736,3 +736,4 @@
   <slot>onActionOpenProject_triggered()</slot>
  </slots>
 </ui>
+

@@ -52,7 +52,6 @@ Gribouillot::Gribouillot(QWidget *parent) :
 
     //TabWidget
     connect (ui->gribTabWidget, &SmartInsertTabWidget::currentChanged, this, &Gribouillot::switchToTabIndex);
-    createPlusTab();
 
     //mapTabWidget is an extension of the mainWindow and even a "friendly" Class.
     connect (ui->mapTabWidget->ui->mapTabNameTlBtt, &QToolButton::clicked, this, &Gribouillot::mapTabNameTlBttClicked);
@@ -147,19 +146,6 @@ void Gribouillot::closeEvent(QCloseEvent *event)
 
 
 /************************* Private functions - UI ****************************/
-
-/**
- * @brief   Create a tab with a "+" icon at the end of the tabBar.
- * @details When clicked, this will generate a new layer.
- */
-void Gribouillot::createPlusTab()
-{
-    ui->gribTabWidget->tabBar()->addTab(QIcon(":/Resources/Icons/add-layer.svg"), QString());
-    int plusTabIndex = ui->gribTabWidget->count() - 1;
-    ui->gribTabWidget->setTabEnabled(plusTabIndex, false);
-    ui->gribTabWidget->setTabToolTip(plusTabIndex, tr("Create new layer"));
-}
-
 /**
  * @brief   Do not allow the use of layer-specific actions.
  * @details Hard coded limit depending on the ui design. See gribouillot.ui
@@ -241,7 +227,6 @@ void Gribouillot::clearView()
 {
     if(currentDrawing != NONE)
     {
-
         //Clear any temporary graphic item: drawing help, etc
         foreach(QGraphicsItem* item, scene->items())
         {

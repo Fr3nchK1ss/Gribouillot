@@ -19,6 +19,12 @@ GribouillotTabWidget::GribouillotTabWidget(QWidget* parent) :
     tabBar()->setSelectionBehaviorOnRemove(QTabBar::SelectLeftTab);
     //setMovable(true);
 
+    //Create a tab with a "+" icon at the end of the tabBar.
+    tabBar()->addTab(QIcon(":/Resources/Icons/add-layer.png"), QString());
+    int plusTabIndex = count() - 1;
+    setTabEnabled(plusTabIndex, false);
+    setTabToolTip(plusTabIndex, tr("Create new layer"));
+
 }
 
 
@@ -34,6 +40,8 @@ int GribouillotTabWidget::insertAndDisplayTab(int index, GribouillotLayer *layer
     return insertIndex;
 
 }
+
+
 
 
 
