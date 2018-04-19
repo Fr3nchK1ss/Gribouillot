@@ -63,10 +63,9 @@ public:
     Item_point *computeCoM(QColor penColor, int penWidth);
 
     //Lines drawing
-    void drawSegment(QColor penColor, int penWidth, QPointF points[]);
     void drawSegment(QColor penColor, int penWidth, QVector<QPointF> positions);
     void drawSegment(QColor penColor, int penWidth, QLineF segment);
-    void drawLine(QColor penColor, int penWidth, QPointF points[]);
+    void drawLine(QColor penColor, int penWidth, QVector<QPointF> points);
     void drawLineFromSegment(QColor penColor, int penWidth, QLineF line);
     void drawLineFromSegment(QColor penColor, int penWidth, QVector<QPointF> positions);
     void drawHorizontal(QColor penColor, int penWidth, QPointF point);
@@ -109,7 +108,6 @@ signals:
 
 private slots:
     void on_layerNameTlBtt_clicked();
-    void on_visibilityCheckBox_stateChanged(int arg1);
     void toggleVisibility();
     void on_opacitySlider_valueChanged(int value);
     void on_deleteLayerTlBtt_clicked();
@@ -118,7 +116,7 @@ private:
     Ui::GribouillotLayer *ui;
     QString label;
     QPushButton* visibilityBtt;
-    bool itemsVisibility;
+    bool areItemsVisible;
     QList<QGraphicsItem *> itemsList;
 
     void initLayer();

@@ -11,6 +11,7 @@
 #define ITEM_ARC_H
 
 #include <QAbstractGraphicsShapeItem>
+#include <QDomDocument>
 #include <QKeyEvent>
 #include <QPainterPath>
 #include <QXmlStreamWriter>
@@ -26,8 +27,9 @@ public:
         // Enable the use of qgraphicsitem_cast with this item.
         return ARC;
     }
-    explicit Item_arc(QPointF center, QRectF rect, qreal startAngle, qreal spanAngle,
+    explicit Item_arc(QPointF center, qreal radius, qreal startAngle, qreal spanAngle,
                       QColor penColor = Qt::black, int penWidth = 3);
+    explicit Item_arc(QDomElement e);
     ~Item_arc(){}
 
     void newPen(QColor penColor, int penWidth);

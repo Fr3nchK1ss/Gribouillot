@@ -11,6 +11,7 @@
 #define ITEM_POINT_H
 
 #include <QColor>
+#include <QDomDocument>
 #include <QKeyEvent>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsProxyWidget>
@@ -33,6 +34,7 @@ public:
 
     explicit Item_point(QColor brushColor, qreal penWidth, QPointF position,
                         int weight = 0);
+    explicit Item_point(QDomElement e);
     ~Item_point(){}
 
     int getWeight();

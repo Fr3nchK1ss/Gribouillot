@@ -23,6 +23,7 @@
 #include "gribouillotlayer.h"
 #include "main.h"
 #include "qlinef58.h"
+#include "gribouillot.h"
 #include "ui_gribouillotlayer.h"
 
 //A class static variable to provide each layer a unique name
@@ -75,17 +76,17 @@ void GribouillotLayer::initLayer()
     ui->setupUi(this);
     ++layer_index;
 
-    itemsVisibility = true;
+    areItemsVisible = true;
     visibilityBtt = new QPushButton(this);
     visibilityBtt->setFlat(true);
     visibilityBtt->setAttribute(Qt::WA_TranslucentBackground);
     visibilityBtt->setIcon(QIcon(QPixmap(":/Resources/Icons/visibility-on.png")));
 
     //Connect the new layer to some mainWindow slots
-    connect(this, SIGNAL(newLayerName(QString)), parent(), SLOT(doChangeLayerName(QString)));
-    connect(this, SIGNAL(deleteLayer()), parent(), SLOT(doDeleteLayer()));
-    connect(this, SIGNAL(addItemToScene(QGraphicsItem*)), parent(), SLOT(doAddItemToScene(QGraphicsItem*)));
-    connect(visibilityBtt, &QPushButton::clicked, this, &GribouillotLayer::toggleVisibility);
+    connect (this, &GribouillotLayer::newLayerName, static_cast<Gribouillot*>(parent()), &Gribouillot::doChangeLayerName);
+    connect (this, &GribouillotLayer::deleteLayer, static_cast<Gribouillot*>(parent()), &Gribouillot::doDeleteLayer);
+    connect (this, &GribouillotLayer::addItemToScene, static_cast<Gribouillot*>(parent()), &Gribouillot::doAddItemToScene);
+    connect (visibilityBtt, &QPushButton::clicked, this, &GribouillotLayer::toggleVisibility);
 
 }
 
@@ -143,7 +144,7 @@ void GribouillotLayer::addItemToLayer(QGraphicsItem *item)
                     | QGraphicsItem::ItemIsSelectable);
 
     item->setOpacity((qreal)ui->opacitySlider->value()/100);
-    item->setVisible(ui->visibilityCheckBox->isChecked());
+    item->setVisible(areItemsVisible);
 
     //qDebug() << "adding item to the itemslist + signal" << item;
 
@@ -222,8 +223,7 @@ void GribouillotLayer::loadXML(QString path)
         //Visibility
         QString visibility = gribLayer.attribute("Visibility");
         if (visibility == "false")
-            ui->visibilityCheckBox->setChecked(false);
-
+            toggleVisibility();//Visibility is ON by default
         //Opacity
         QString opacity = gribLayer.attribute("Opacity");
         ui->opacitySlider->setValue(opacity.toInt());
@@ -231,120 +231,37 @@ void GribouillotLayer::loadXML(QString path)
     /* Constructs WEIGHTED POINTS graphics items */
     QDomNodeList points = doc.elementsByTagName("Point");
     for (int i=0; i < points.size();  ++i)
-    {
-        QDomElement p = points.item(i).toElement();
-        int x = p.attribute("x").toDouble();
-        int y = p.attribute("y").toDouble();
-        QColor color = QColor(p.attribute("color"));
-        int width = p.attribute("penWidth").toInt();
-        int weight = p.attribute("weight").toInt();
-
-        drawPoint(color, width, QPointF(x, y), weight);
-    }
+        addItemToLayer( new Item_point(points.item(i).toElement()) );
 
     /* Constructs LINES graphics items */
     QDomNodeList lines = doc.elementsByTagName("Line");
     for (int i=0; i < lines.size();  ++i)
-    {
-        QDomElement p = lines.item(i).toElement();
-        qreal x0 = p.attribute("x1").toDouble();
-        qreal y0 = p.attribute("y1").toDouble();
-        qreal x1 = p.attribute("x2").toDouble();
-        qreal y1 = p.attribute("y2").toDouble();
-        QColor color = QColor(p.attribute("color"));
-        int width = p.attribute("penWidth").toInt();
-
-        QPointF points[] = {QPointF(x0, y0), QPointF(x1, y1)};
-        drawLine(color, width, points);
-
-    }
+        addItemToLayer( new Item_line(lines.item(i).toElement()) );
 
     /* Constructs SEGMENTS graphics items */
     QDomNodeList segments = doc.elementsByTagName("Segment");
     for (int i=0; i < segments.size();  ++i)
-    {
-        QDomElement p = segments.item(i).toElement();
-        qreal x0 = p.attribute("x1").toDouble();
-        qreal y0 = p.attribute("y1").toDouble();
-        qreal x1 = p.attribute("x2").toDouble();
-        qreal y1 = p.attribute("y2").toDouble();
-        QColor color = QColor(p.attribute("color"));
-        int width = p.attribute("penWidth").toInt();
-
-        QPointF points[] = {QPointF(x0, y0), QPointF(x1, y1)};
-        drawSegment(color, width, points);
-
-    }
+        addItemToLayer( new Item_segment(segments.item(i).toElement()) );
 
     /* Constructs CIRCLES graphics items */
     QDomNodeList circles = doc.elementsByTagName("Circle");
     for (int i=0; i < circles.size();  ++i)
-    {
-        QDomElement p = circles.item(i).toElement();
-        qreal x = p.attribute("x").toDouble();
-        qreal y = p.attribute("y").toDouble();
-        qreal radius = p.attribute("radius").toDouble();
-        QColor color = QColor(p.attribute("color"));
-        int width = p.attribute("penWidth").toInt();
-
-        drawCircle(color, width, QPointF(x, y), radius);
-    }
+        addItemToLayer( new Item_circle(circles.item(i).toElement()) );
 
     /* Constructs ARCS graphics items */
     QDomNodeList arcs = doc.elementsByTagName("Arc");
     for (int i=0; i < arcs.size();  ++i)
-    {
-        QDomElement p = arcs.item(i).toElement();
-        qreal x = p.attribute("x").toDouble();
-        qreal y = p.attribute("y").toDouble();
-        qreal radius = p.attribute("radius").toDouble();
-        qreal startAngle = p.attribute("startAngle").toDouble();
-        qreal spanAngle = p.attribute("spanAngle").toDouble();
-        QColor color = QColor(p.attribute("color"));
-        int width = p.attribute("penWidth").toInt();
-
-        drawArc(color, width, QPointF(x, y), radius, startAngle,
-                spanAngle);
-    }
+        addItemToLayer( new Item_arc(arcs.item(i).toElement()) );
 
     /* Constructs SPIRALS graphics items */
     QDomNodeList spirals = doc.elementsByTagName("Spiral");
     for (int i=0; i < spirals.size();  ++i)
-    {
-        QDomElement p = spirals.item(i).toElement();
-        QVector<QPointF> centers;
-        qreal x0 = p.attribute("x0").toDouble();
-        qreal y0 = p.attribute("y0").toDouble();
-        qreal x1 = p.attribute("x1").toDouble();
-        qreal y1 = p.attribute("y1").toDouble();
-        qreal x2 = p.attribute("x2").toDouble();
-        qreal y2 = p.attribute("y2").toDouble();
-        qreal x3 = p.attribute("x3").toDouble();
-        qreal y3 = p.attribute("y3").toDouble();
-
-        centers = {QPointF(x0,y0), QPointF(x1,y1),
-                   QPointF(x2,y2), QPointF(x3,y3)};
-
-        QColor color = QColor(p.attribute("color"));
-        int width = p.attribute("penWidth").toInt();
-
-        drawSpiral(color, width, centers);
-    }
+        addItemToLayer( new Item_spiral(spirals.item(i).toElement()) );
 
     /* Load PIXMAP */
     QDomNodeList pixmaps = doc.elementsByTagName("Pixmap");
     for (int i=0; i < pixmaps.size();  ++i)
-    {
-        QDomElement p = pixmaps.item(i).toElement();
-        QString imagePath = p.attribute("imagePath");
-        qreal x = p.attribute("x").toDouble();
-        qreal y = p.attribute("y").toDouble();
-        qreal scale = p.attribute("scale").toDouble();
-        qreal rotation = p.attribute("rotation").toDouble();
-
-
-        addItemToLayer(new Item_pixmap(imagePath, QPointF(x, y), scale, rotation));
-    }
+        addItemToLayer( new Item_pixmap(pixmaps.item(i).toElement()) );
 
     return;
 }
@@ -375,9 +292,9 @@ bool GribouillotLayer::writeXML()
     xW.writeStartDocument();
 
     xW.writeStartElement("GribouillotLayer");
-        ui->visibilityCheckBox->isChecked() ?
-                xW.writeAttribute("Visibility", "true"):
-                xW.writeAttribute("Visibility", "false");
+        areItemsVisible ?
+            xW.writeAttribute("Visibility", "true"):
+            xW.writeAttribute("Visibility", "false");
         xW.writeAttribute("Opacity", QString::number(ui->opacitySlider->value()));
 
     xW.writeStartElement("GraphicsItemList");
@@ -511,29 +428,22 @@ void GribouillotLayer::on_layerNameTlBtt_clicked()
 
 
 /**
- * @brief   Toggle layer visibility
+ * @brief   Toggle visibility of the items of the layer
  */
-void GribouillotLayer::on_visibilityCheckBox_stateChanged(int arg1)
-{
-    bool isVisible = (arg1==0)? false : true;
-
-}
-
-
 void GribouillotLayer::toggleVisibility()
 {
-    itemsVisibility = !itemsVisibility;
+    areItemsVisible = !areItemsVisible;
 
-    if (itemsVisibility)
+    if (areItemsVisible)
         visibilityBtt->setIcon(QIcon(QPixmap(":/Resources/Icons/visibility-on.png")));
     else
         visibilityBtt->setIcon(QIcon(QPixmap(":/Resources/Icons/visibility-off.png")));
 
     for (int i = 0; i < itemsList.size(); ++i)
-        itemsList.at(i)->setVisible(itemsVisibility);
-
+        itemsList.at(i)->setVisible(areItemsVisible);
 
 }
+
 
 /**
  * @brief   Change layer opacity
@@ -685,20 +595,9 @@ Item_point* GribouillotLayer::computeCoM(QColor penColor, int penWidth)
 
 /* LINE DRAWINGS (LINE, SEGMENT, PARALLEL, PERPENDICULAR, BISECTION) */
 /**
- * @brief   draw a segment from 2 points given as a vector. Called from gribouillot_toolbar.
+ * @brief   draw a segment from 2 points given as a vector.
  */
-void GribouillotLayer::drawSegment(QColor penColor, int penWidth, QVector<QPointF> positions)
-{
-    QPointF pos[2] = {positions[0], positions[1]};
-    drawSegment(penColor, penWidth, pos);
-
-}
-
-
-/**
- * @brief   draw a segment from 2 points given as an array.
- */
-void GribouillotLayer::drawSegment(QColor penColor, int penWidth, QPointF points[])
+void GribouillotLayer::drawSegment(QColor penColor, int penWidth, QVector<QPointF> points)
 {
     if( points[0] != points[1])
         addItemToLayer(new Item_segment(penColor, penWidth, points));
@@ -711,8 +610,7 @@ void GribouillotLayer::drawSegment(QColor penColor, int penWidth, QPointF points
  */
 void GribouillotLayer::drawSegment(QColor penColor, int penWidth, QLineF segment)
 {
-    QPointF pos[2] = {segment.p1(), segment.p2()};
-    drawSegment(penColor, penWidth, pos);
+    drawSegment(penColor, penWidth, QVector<QPointF>({segment.p1(), segment.p2()}));
 
 }
 
@@ -723,7 +621,7 @@ void GribouillotLayer::drawSegment(QColor penColor, int penWidth, QLineF segment
  *          drawLineFromSegment() or when loading XML data. points[] have extreme
  *          values corresponding to a pseudo-infinite line.
  */
-void GribouillotLayer::drawLine(QColor penColor, int penWidth, QPointF points[])
+void GribouillotLayer::drawLine(QColor penColor, int penWidth, QVector<QPointF> points)
 {
     addItemToLayer(new Item_line(penColor, penWidth, points));
 
@@ -772,7 +670,7 @@ void GribouillotLayer::drawLineFromSegment(QColor penColor, int penWidth, QVecto
             newEnds[1] = positions[1];
     }
 
-    drawLine(penColor, penWidth, newEnds);
+    drawLine(penColor, penWidth, {newEnds[0], newEnds[1]});
 
 }
 
@@ -784,8 +682,7 @@ void GribouillotLayer::drawLineFromSegment(QColor penColor, int penWidth, QVecto
 void GribouillotLayer::drawLineFromSegment(QColor penColor, int penWidth, QLineF line)
 {
     if(!line.isNull())
-        drawLineFromSegment(penColor, penWidth,
-                            QVector<QPointF>({line.p1(), line.p2()}) );
+        drawLineFromSegment( penColor, penWidth, QVector<QPointF>({line.p1(), line.p2()}) );
 
 }
 
@@ -1086,8 +983,7 @@ QPointF GribouillotLayer::drawCircleFromTriangle(QColor penColor, int penWidth, 
 QPointF GribouillotLayer::drawArc(QColor penColor, int penWidth, QPointF center, qreal radius,
                                   qreal startAngle, qreal spanAngle)
 {
-    addItemToLayer(new Item_arc(center, QRectF(-radius, -radius, radius*2, radius*2),
-                                startAngle, spanAngle, penColor, penWidth));
+    addItemToLayer( new Item_arc(center, radius, startAngle, spanAngle, penColor, penWidth) );
 
     return center;
 

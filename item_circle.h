@@ -10,6 +10,7 @@
 #ifndef ITEM_CIRCLE_H
 #define ITEM_CIRCLE_H
 
+#include <QDomDocument>
 #include <QGraphicsEllipseItem>
 #include <QPainter>
 #include <QKeyEvent>
@@ -27,6 +28,7 @@ public:
         return CIRCLE;
     }
     explicit Item_circle(QColor penColor, int penWidth, QPointF center, qreal radius);
+    explicit Item_circle(QDomElement e);
     ~Item_circle(){}
 
     void newPen(QColor penColor, int penWidth);

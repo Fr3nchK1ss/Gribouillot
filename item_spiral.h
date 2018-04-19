@@ -11,6 +11,7 @@
 #define ITEM_SPIRAL_H
 
 #include <QAbstractGraphicsShapeItem>
+#include <QDomDocument>
 #include <QKeyEvent>
 #include <QPainterPath>
 #include <QRectF>
@@ -28,10 +29,11 @@ public:
         return SPIRAL;
     }
     explicit Item_spiral(QColor penColor, int penWidth, QVector<QPointF> base);
+    explicit Item_spiral(QDomElement e);
     ~Item_spiral(){}
 
     void newPen(QColor penColor, int penWidth);
-    static QRectF computeArcRect(int sideNumber, QVector<QLineF> side);
+    static qreal computeArcRadius(int sideNumber, QVector<QLineF> side);
     static void computeArcAngles(QLineF sideA, QLineF sideB,
                                  qreal &startAngle, qreal &spanAngle);
     void serialize2xml(QXmlStreamWriter* w);

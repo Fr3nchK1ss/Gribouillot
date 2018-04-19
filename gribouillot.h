@@ -39,6 +39,12 @@ public:
 
     void openProject(QString gribFile);
 
+public slots:
+    //React to signals from the current layer
+    void doChangeLayerName(QString label);
+    void doDeleteLayer();
+    void doAddItemToScene(QGraphicsItem*item);
+
 protected:
     void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
 
@@ -127,11 +133,6 @@ private slots:
     //React to change in tabs selection
     void tabWidgetClicked(int newTabIndex);
     void switchToTabIndex(int newTabIndex);
-
-    //React to signals from the current layer
-    void doChangeLayerName(QString label);
-    void doDeleteLayer();
-    void doAddItemToScene(QGraphicsItem*item);
 
 
 /*************** In gribouillot_toolbar.cpp **************/

@@ -30,7 +30,8 @@ Item_spiral::Item_spiral(QColor penColor, int penWidth, QVector<QPointF> base)
     for(int i = 0; i < base.length(); ++i)
     {
         //Retrieve arcRect for baseSide[i] in zero-centered coordinates
-        QRectF zeroCenteredArcRect = computeArcRect(i, baseSide);
+        qreal radius = computeArcRadius(i, baseSide);
+        QRectF zeroCenteredArcRect(-radius, -radius, radius*2, radius*2);
         //Position the arcRect correctly in spiral local coordinates
         arcsRect << zeroCenteredArcRect.translated(mapFromScene(baseSide[i].p2()));
 
@@ -45,6 +46,22 @@ Item_spiral::Item_spiral(QColor penColor, int penWidth, QVector<QPointF> base)
 
     newPen(penColor, penWidth);
 }
+
+
+/**
+ * @brief       Construct a spiral from saved XML data
+ * @details     Be sure to call with a QDomElement containing
+ *              spiral data!
+ * @attention   see also serialize2xml
+ */
+Item_spiral::Item_spiral(QDomElement e) :
+    Item_spiral(QColor(e.attribute("color")),
+                e.attribute("penWidth").toInt(),
+                {QPointF(e.attribute("x0").toDouble(), e.attribute("y0").toDouble()),
+                 QPointF(e.attribute("x1").toDouble(), e.attribute("y1").toDouble()),
+                 QPointF(e.attribute("x2").toDouble(), e.attribute("y2").toDouble()),
+                 QPointF(e.attribute("x3").toDouble(), e.attribute("y3").toDouble())})
+{}
 
 
 /**
@@ -100,36 +117,28 @@ void Item_spiral::serialize2xml(QXmlStreamWriter *w)
 
 /********************** Public static functions *********************/
 /**
- * @brief   Compute the rectangle necessary to draw the arc of a
- *          specific side in coordinates centered on zero.
+ * @brief   Compute the radius necessary to draw the arc of a
+ *          specific side.
  * @details static public function
  */
-QRectF Item_spiral::computeArcRect(int sideNumber, QVector<QLineF> side)
+qreal Item_spiral::computeArcRadius(int sideNumber, QVector<QLineF> side)
 {
-    QRectF arcRect;
+    qreal radius = 0;
     QLineF s = side[sideNumber];//For convenience
 
     if(!s.isNull())
     {
         /*
-         * The arcRect half-width for side 'i' is the length of the
+         * The arc radius for side 'i' is the length of the
          * current side plus the length of the previous sides if any:
          * -> this is how a spiral grows!
          */
-        qreal radius = s.length();
+        radius = s.length();
         for (int i = 0; i < sideNumber; ++i)
             radius += side[i].length();
-
-        //Build the rectangle of proper radius
-        QLineF horizontal(QPointF(0,0), QPointF(-radius,0));
-        //halfLeftSide is the upper-half part of the left side of the rectangle.
-        QLineF halfLeftSide = QLineF(horizontal.p2(), horizontal.p1()).normalVector();
-        QPointF topLeft = halfLeftSide.p2();
-        arcRect = QRectF(topLeft, QSizeF(2*radius, 2*radius));
-
     }
 
-    return arcRect;
+    return radius;
 }
 
 

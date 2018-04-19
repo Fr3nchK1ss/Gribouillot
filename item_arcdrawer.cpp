@@ -49,12 +49,12 @@ Item_arcDrawer::Item_arcDrawer(Item_circle* circle) :
 /**
  * @brief   This arcDrawer is a helper to draw an arc from a center and a point
  */
-Item_arcDrawer::Item_arcDrawer(int penWidth, QColor c, QPointF center, QPointF radiusPoint) :
+Item_arcDrawer::Item_arcDrawer(QColor penColor, int penWidth, QPointF center, QPointF radiusPoint) :
     QAbstractGraphicsShapeItem()
 {
     QPen pen;
     pen.setCosmetic(true);
-    pen.setColor(c);
+    pen.setColor(penColor);
     pen.setWidth(penWidth -1);
     pen.setStyle(Qt::DashLine);
     setPen(pen);
@@ -77,13 +77,13 @@ Item_arcDrawer::Item_arcDrawer(int penWidth, QColor c, QPointF center, QPointF r
  * @brief   This arc drawer is a helper to draw a line from another line, given an
  *          angle.
  */
-Item_arcDrawer::Item_arcDrawer(int penWidth, QColor c, int windowSize,
+Item_arcDrawer::Item_arcDrawer(QColor penColor, int penWidth, int windowSize,
                                QPointF center, QLineF sourceLine) :
     QAbstractGraphicsShapeItem()
 {
     QPen pen;
     pen.setCosmetic(true);
-    pen.setColor(c);
+    pen.setColor(penColor);
     pen.setWidth(penWidth);
     pen.setStyle(Qt::DotLine);
     setPen(pen);
@@ -139,13 +139,10 @@ Item_arcDrawer::Item_arcDrawer(QPointF center, QSizeF picSize)
  */
 Item_arc* Item_arcDrawer::getArc()
 {
-    //qDebug() << "in getArc " << spanAngle;
     if (qAbs(spanAngle) < 0.5)
         return nullptr;//Arc too small == point
     //else
-    return new Item_arc(scenePos(),
-                        QRectF(-radius, -radius, radius*2, radius*2),
-                        startAngle, spanAngle);
+    return new Item_arc(scenePos(), radius, startAngle, spanAngle);
 
 }
 

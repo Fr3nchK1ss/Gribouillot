@@ -22,7 +22,7 @@ Minimap::Minimap(QGraphicsScene *scene, ZoomableGraphicsView *mainView) :
     setToolTip(tr("Double-click to jump to a new position."));
     show();
 
-    connect(this, SIGNAL(centerMap(QPointF)), mainView, SLOT(slotCenterOn(QPointF)));
+    connect(this, &Minimap::centerMap, mainView, &ZoomableGraphicsView::slotCenterOn);
 }
 
 Minimap::~Minimap()

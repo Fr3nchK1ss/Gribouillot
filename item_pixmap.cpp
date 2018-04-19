@@ -34,6 +34,23 @@ Item_pixmap::Item_pixmap(QString path, QPointF position, qreal scale, qreal rota
 }
 
 
+/**
+ * @brief       Construct a pixmap from saved XML data
+ * @details     Be sure to call with a QDomElement containing
+ *              pixmap data!
+ * @attention   see also serialize2xml
+ */
+Item_pixmap::Item_pixmap(QDomElement e) :
+    Item_pixmap(e.attribute("imagePath"),
+                QPointF(e.attribute("x").toDouble(),e.attribute("y").toDouble()),
+                e.attribute("scale").toDouble(),
+                e.attribute("rotation").toDouble())
+{}
+
+
+/**
+ * @brief Item_pixmap::serialize2xml
+ */
 void Item_pixmap::serialize2xml(QXmlStreamWriter *w)
 {
     w->writeStartElement("Pixmap");

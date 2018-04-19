@@ -30,8 +30,8 @@ public:
     }
 
     explicit Item_arcDrawer(Item_circle* circle);
-    explicit Item_arcDrawer(int penWidth, QColor c, QPointF center, QPointF radiusPoint);
-    explicit Item_arcDrawer(int penWidth, QColor c, int windowSize, QPointF center,
+    explicit Item_arcDrawer(QColor penColor, int penWidth, QPointF center, QPointF radiusPoint);
+    explicit Item_arcDrawer(QColor penColor, int penWidth, int windowSize, QPointF center,
                             QLineF sourceLine);
     explicit Item_arcDrawer(QPointF center, QSizeF picSize);
     ~Item_arcDrawer(){}

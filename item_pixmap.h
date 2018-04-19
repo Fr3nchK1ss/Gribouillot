@@ -10,6 +10,7 @@
 #ifndef ITEM_PIXMAP_H
 #define ITEM_PIXMAP_H
 
+#include <QDomDocument>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsSceneWheelEvent>
@@ -28,7 +29,9 @@ public:
         // Enable the use of qgraphicsitem_cast with this item.
         return PIXMAP;
     }
-    explicit Item_pixmap(QString path, QPointF position = QPointF(), qreal scale = 1, qreal rotation = 0);
+    explicit Item_pixmap(QString path, QPointF position = QPointF(), qreal scale = 1,
+                            qreal rotation = 0);
+    explicit Item_pixmap(QDomElement e);
     ~Item_pixmap(){}
 
     void setPath(QString path);

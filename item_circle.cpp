@@ -29,6 +29,23 @@ Item_circle::Item_circle(QColor penColor, int penWidth, QPointF center,
 }
 
 
+/**
+ * @brief       Construct a circle from saved XML data
+ * @details     Be sure to call with a QDomElement containing
+ *              circle data!
+ * @attention   see also serialize2xml
+ */
+Item_circle::Item_circle(QDomElement e) :
+    Item_circle(QColor(e.attribute("color")),
+                e.attribute("penWidth").toInt(),
+                QPointF(e.attribute("x").toDouble(), e.attribute("y").toDouble()),
+                e.attribute("radius").toDouble())
+{}
+
+
+/**
+ * @brief Item_circle::newPen
+ */
 void Item_circle::newPen(QColor penColor, int penWidth)
 {
     QPen pen(penColor, penWidth);
@@ -41,12 +58,18 @@ void Item_circle::newPen(QColor penColor, int penWidth)
 }
 
 
+/**
+ * @brief Item_circle::getRadius accessor
+ */
 qreal Item_circle::getRadius() const
 {
     return rect().width()/(qreal)2;
 }
 
 
+/**
+ * @brief Item_circle::serialize2xml
+ */
 void Item_circle::serialize2xml(QXmlStreamWriter* w)
 {
     w->writeStartElement("Circle");

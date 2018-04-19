@@ -101,8 +101,8 @@ void Gribouillot::newSceneClickPreSelect(QPointF position)
                 if( drawingCoords[0] != drawingCoords[1])
                 {
                     //Show a visual help to draw the arc
-                    Item_arcDrawer* helper = new Item_arcDrawer(drawingWidth,
-                                                                drawingColor,
+                    Item_arcDrawer* helper = new Item_arcDrawer(drawingColor,
+                                                                drawingWidth,
                                                                 drawingCoords[0],
                                                                 drawingCoords[1]);
                     scene->addItem(helper);
@@ -117,8 +117,8 @@ void Gribouillot::newSceneClickPreSelect(QPointF position)
             if (mG == nullptr)
             {
                 //Show a visual help to draw the spiral
-                Item_spiralDrawer* helper = new Item_spiralDrawer(drawingWidth,
-                                                                  drawingColor);
+                Item_spiralDrawer* helper = new Item_spiralDrawer(drawingColor,
+                                                                  drawingWidth);
                 /*
                  * Unlike other figures, a spiral can be drawn with a variable number of
                  * clicks. Also the drawing ends directly by a signal from the helper,
@@ -304,10 +304,11 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
             break;
 
         case ARC_FROMCIRCLE:
-            if ( mG == nullptr )
+            if ( mG == nullptr || mG->type() != ARC_DRAWER )
             {
                 if ( isOnlySelected({CIRCLE},1) )
-                    visualHelp_arcFromCircle();//mouse grabbed
+                    visualHelp_arcFromCircle();//start new ARC_DRAWER
+                //else wait for user to pick a circle
             }
             else//mG == ARC_DRAWER
             {
@@ -315,17 +316,18 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
                 {
                     //Finalize drawing
                     Item_arcDrawer* aD = qgraphicsitem_cast<Item_arcDrawer*>(mG);
+
                     currentLayer->drawArcFromCircle(drawingColor, drawingWidth,
                                                     aD->getSourceCircle(),
                                                     aD->getArc());
                     /*
                      * Reset drawing. Helper item, which is the non-null mouseGrabber at
-                     * this point, will be deleted soon by a call to setDrawingView().
+                     * this point, will soon be deleted by a call to setDrawingView().
                      */
                     on_actionArcFromCircle_triggered();
                 }
+                //else wait for more coordinates
             }
-            //else wait for user to pick a circle OR for more Coordinates
             break;
 
         case NONE:
@@ -669,6 +671,8 @@ void Gribouillot::visualHelp_arcFromCircle()
     Item_circle* circle = qgraphicsitem_cast<Item_circle*>(
                                 scene->selectedItems().last());
 
+    //Disable any new circle selection
+    currentLayer->enableItems({});
     //Show a visual help to draw the arc from the circle
     Item_arcDrawer* helper = new Item_arcDrawer(circle);
     //The scene, not the current layer, must take care of this helper
@@ -677,6 +681,7 @@ void Gribouillot::visualHelp_arcFromCircle()
     helper->grabMouse();
     //Inform what to do next
     statusBar()->showMessage(drawingTips[0]);
+
 }
 
 
@@ -707,8 +712,8 @@ void Gribouillot::visualHelp_pointOnRail()
 void Gribouillot::visualHelp_lineFromAngle(Item_pointOnRail* pOR)
 {
     qreal windowWidth = ui->zGraphicsView->width() / ui->zGraphicsView->getZoom();
-    Item_arcDrawer* helper = new Item_arcDrawer(drawingWidth,
-                                                drawingColor,
+    Item_arcDrawer* helper = new Item_arcDrawer(drawingColor,
+                                                drawingWidth,
                                                 windowWidth,
                                                 pOR->scenePos(),
                                                 pOR->getRail());
@@ -850,7 +855,7 @@ void Gribouillot::on_actionMeasureDistance_triggered()
         currentDrawing = SCALERULER;
 
         Item_scaleRuler* scaleRuler = new Item_scaleRuler();
-        connect(scaleRuler, SIGNAL(newMeasure(qreal)),this, SLOT(measureDistance(qreal)));
+        connect (scaleRuler, &Item_scaleRuler::newMeasure,this, &Gribouillot::measureDistance);
         scene->addItem(scaleRuler);
         scaleRuler->grabMouse();
 
@@ -1137,8 +1142,7 @@ void Gribouillot::on_actionArcFromCircle_triggered()
                    tr("Arc: define the second boundary.")};
 
     if( isOnlySelected({CIRCLE}, 1) )
-       //Call helper immediately
-        visualHelp_arcFromCircle();
+        visualHelp_arcFromCircle();//Call helper immediately
     else
         statusBar()->showMessage(tr("Arc: Choose a circle to cut out."));
 }

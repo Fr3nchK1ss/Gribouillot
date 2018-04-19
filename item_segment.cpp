@@ -15,12 +15,26 @@
 #include "item_segment.h"
 #include "gribouillotscene.h"
 
-Item_segment::Item_segment(QColor penColor, int penWidth, QPointF points[]):
+Item_segment::Item_segment(QColor penColor, int penWidth, QVector<QPointF> points):
     QGraphicsLineItem(QLineF(points[0], points[1]))
 {
     newPen(penColor, penWidth);
 
 }
+
+
+/**
+ * @brief       Construct a segment from saved XML data
+ * @details     Be sure to call with a QDomElement containing
+ *              segment data!
+ * @attention   see also serialize2xml
+ */
+Item_segment::Item_segment(QDomElement e) :
+    Item_segment(QColor(e.attribute("color")),
+                 e.attribute("penWidth").toInt(),
+                 {QPointF(e.attribute("x0").toDouble(), e.attribute("y0").toDouble()),
+                  QPointF(e.attribute("x1").toDouble(), e.attribute("y1").toDouble())})
+{}
 
 
 /**
@@ -66,10 +80,10 @@ void Item_segment::createSelectionPolygon(int penWidth)
 void Item_segment::serialize2xml(QXmlStreamWriter* w)
 {
     w->writeStartElement("Segment");
-    w->writeAttribute("x1", QString::number(line().x1()));
-    w->writeAttribute("y1", QString::number(line().y1()));
-    w->writeAttribute("x2", QString::number(line().x2()));
-    w->writeAttribute("y2", QString::number(line().y2()));
+    w->writeAttribute("x0", QString::number(line().x1()));
+    w->writeAttribute("y0", QString::number(line().y1()));
+    w->writeAttribute("x1", QString::number(line().x2()));
+    w->writeAttribute("y1", QString::number(line().y2()));
     w->writeAttribute("color", pen().color().name());
     w->writeAttribute("penWidth", QString::number(pen().width()));
     w->writeEndElement();

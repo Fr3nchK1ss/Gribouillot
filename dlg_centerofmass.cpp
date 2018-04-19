@@ -80,7 +80,7 @@ void Dlg_centerOfMass::finalizeLayout()
     {   
         buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
                                          | QDialogButtonBox::Cancel);
-        connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+        connect(buttonBox, &QDialogButtonBox::accepted, this, &Dlg_centerOfMass::accept);
     }
     else
     {
@@ -88,7 +88,7 @@ void Dlg_centerOfMass::finalizeLayout()
         buttonBox = new QDialogButtonBox(QDialogButtonBox::Cancel);
     }
 
-    connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+    connect(buttonBox, &QDialogButtonBox::rejected, this, &Dlg_centerOfMass::reject);
     comLayout->addWidget(new QLabel());
     comLayout->addWidget(buttonBox, gridCount+2, 0);
 

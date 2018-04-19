@@ -10,6 +10,7 @@
 #ifndef ITEM_SEGMENT_H
 #define ITEM_SEGMENT_H
 
+#include <QDomDocument>
 #include <QGraphicsLineItem>
 #include <QXmlStreamWriter>
 
@@ -25,7 +26,8 @@ public:
         return SEGMENT;
     }
 
-    explicit  Item_segment(QColor penColor, int penWidth, QPointF points[]);
+    explicit Item_segment(QColor penColor, int penWidth, QVector<QPointF> points);
+    explicit Item_segment(QDomElement e);
     ~Item_segment(){}
 
     void newPen(QColor penColor, int penWidth);

@@ -48,17 +48,17 @@ Gribouillot::Gribouillot(QWidget *parent) :
     ui->setupUi(this);
 
     //Menu connections
-    connect (ui->actionAbout_Qt, SIGNAL(triggered(bool)), qApp, SLOT(aboutQt()));
+    connect (ui->actionAbout_Qt, &QAction::triggered, qApp, &QApplication::aboutQt);
 
     //TabWidget
-    connect(ui->gribTabWidget, &SmartInsertTabWidget::currentChanged, this, &Gribouillot::switchToTabIndex);
+    connect (ui->gribTabWidget, &SmartInsertTabWidget::currentChanged, this, &Gribouillot::switchToTabIndex);
     createPlusTab();
 
     //mapTabWidget is an extension of the mainWindow and even a "friendly" Class.
-    connect (ui->mapTabWidget->ui->mapTabNameTlBtt, SIGNAL(clicked()), this, SLOT(mapTabNameTlBttClicked()));
-    connect (ui->mapTabWidget->ui->blackWhiteTlBtt, SIGNAL(toggled(bool)), this, SLOT(blackWhiteTlBttClicked(bool)));
-    connect (ui->mapTabWidget->ui->scaleRulerTlBtt, SIGNAL(clicked()), this, SLOT(scaleRulerTlBttTriggered()));
-    connect (ui->mapTabWidget->ui->gpsTlBtt, SIGNAL(clicked()), this, SLOT(gpsTlBttClicked()));
+    connect (ui->mapTabWidget->ui->mapTabNameTlBtt, &QToolButton::clicked, this, &Gribouillot::mapTabNameTlBttClicked);
+    connect (ui->mapTabWidget->ui->blackWhiteTlBtt, &QToolButton::toggled, this, &Gribouillot::blackWhiteTlBttClicked);
+    connect (ui->mapTabWidget->ui->scaleRulerTlBtt, &QToolButton::clicked, this, &Gribouillot::scaleRulerTlBttTriggered);
+    connect (ui->mapTabWidget->ui->gpsTlBtt, &QToolButton::clicked, this, &Gribouillot::gpsTlBttClicked);
 
     //The spiral dialog is an extension of the interface which is shown/hidden if necessary
     spiralDialog = new Dlg_spiral(this);
@@ -68,17 +68,17 @@ Gribouillot::Gribouillot(QWidget *parent) :
     drawingCursor = QCursor(QPixmap(":/Resources/Icons/cursor-drawing.png"));
 
     //scene
-    connect (scene, SIGNAL(selectionChanged()), this, SLOT(sceneSelectionChanged()));
-    connect (scene, SIGNAL(newMouseClickPreSelect(QPointF)), this, SLOT(newSceneClickPreSelect(QPointF)));
-    connect (scene, SIGNAL(newMouseClickPostSelect(QPointF)), this, SLOT(newSceneClickPostSelect(QPointF)));
-    connect (scene, SIGNAL(newMouseMove(QPointF)), this, SLOT(newMoveOnScene(QPointF)));
-    connect (scene, SIGNAL(keyDeletePressed()), this, SLOT(keyDeleteFromScene()));
-    connect (scene, SIGNAL(keySpacePressed()), this, SLOT(keySpaceFromScene()));
-    connect (scene, SIGNAL(keyCPressed()), this, SLOT(on_actionChooseColor_triggered()));
-    connect (scene, SIGNAL(keyTPressed()), this, SLOT(keyTFromScene()));
+    connect (scene, &GribouillotScene::selectionChanged, this, &Gribouillot::sceneSelectionChanged);
+    connect (scene, &GribouillotScene::newMouseClickPreSelect, this, &Gribouillot::newSceneClickPreSelect);
+    connect (scene, &GribouillotScene::newMouseClickPostSelect, this, &Gribouillot::newSceneClickPostSelect);
+    connect (scene, &GribouillotScene::newMouseMove, this, &Gribouillot::newMoveOnScene);
+    connect (scene, &GribouillotScene::keyDeletePressed, this, &Gribouillot::keyDeleteFromScene);
+    connect (scene, &GribouillotScene::keySpacePressed, this, &Gribouillot::keySpaceFromScene);
+    connect (scene, &GribouillotScene::keyCPressed, this, &Gribouillot::on_actionChooseColor_triggered);
+    connect (scene, &GribouillotScene::keyTPressed, this, &Gribouillot::keyTFromScene);
 
     //Connect mapTabWidget to zGraphicsView in order to update the black & white scale bar
-    connect(ui->mapTabWidget, SIGNAL(newSystemScale(qreal, QString)), ui->zGraphicsView, SLOT(systemScaleChanged(qreal, QString)));
+    connect(ui->mapTabWidget, &MapTabWidget::newSystemScale, ui->zGraphicsView, &ZoomableGraphicsView::systemScaleChanged);
 
     //Toolbar
     drawingGroup = new QActionGroup(this);
@@ -113,7 +113,7 @@ Gribouillot::Gribouillot(QWidget *parent) :
     drawingGroup->addAction(ui->actionLoadPicture);
 
     //connect because mapTabWidget toolButtons can not be a part of the QActionGroup above
-    connect(drawingGroup, SIGNAL(triggered(QAction*)), ui->mapTabWidget, SLOT(uncheckDrawingButtons()));
+    connect(drawingGroup, &QActionGroup::triggered, ui->mapTabWidget, &MapTabWidget::uncheckDrawingButtons);
 
     //Disable everything before a first project is created
     ui->toolBar->setEnabled(false);
@@ -373,9 +373,9 @@ void Gribouillot::initGpsDialog()
 {
     gpsEnabled = false;
     gpsDialog = new Dlg_setupGps(scene, this);
-    connect(gpsDialog, SIGNAL(accepted()), this, SLOT(acceptGpsDialog()));
-    connect(gpsDialog, SIGNAL(rejected()), this, SLOT(hideGpsDialog()));
-    connect(gpsDialog, SIGNAL(disableGPS()), this, SLOT(disableGps()));
+    connect(gpsDialog, &Dlg_setupGps::accepted, this, &Gribouillot::acceptGpsDialog);
+    connect(gpsDialog, &Dlg_setupGps::rejected, this, &Gribouillot::hideGpsDialog);
+    connect(gpsDialog, &Dlg_setupGps::disableGPS, this, &Gribouillot::disableGps);
 }
 
 
@@ -1022,7 +1022,7 @@ void Gribouillot::scaleRulerTlBttTriggered()
     currentDrawing = SCALERULER;
 
     Item_scaleRuler* scaleRuler = new Item_scaleRuler();
-    connect(scaleRuler, SIGNAL(newMeasure(qreal)),ui->mapTabWidget, SLOT(newScaleMeasure(double)));
+    connect(scaleRuler, &Item_scaleRuler::newMeasure,ui->mapTabWidget, &MapTabWidget::newScaleMeasure);
     scene->addItem(scaleRuler);
     scaleRuler->grabMouse();//to respond to mouse clicks
 

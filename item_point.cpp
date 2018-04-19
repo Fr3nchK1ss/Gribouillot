@@ -16,6 +16,8 @@
 #include "dlg_setupgps.h"
 #include "item_point.h"
 
+
+
 Item_point::Item_point(QColor brushColor, qreal penWidth, QPointF position,
                        int weight):
     /**
@@ -54,6 +56,21 @@ Item_point::Item_point(QColor brushColor, qreal penWidth, QPointF position,
     setWeight(weight);
     showWeight(false);//weight label hidden by default
 }
+
+
+/**
+ * @brief       Construct a point from saved XML data
+ * @details     Be sure to call with a QDomElement containing
+ *              point data!
+ * @attention   see also serialize2xml
+ */
+Item_point::Item_point(QDomElement e) :
+    Item_point(QColor(e.attribute("color")),
+               e.attribute("penWidth").toInt(),
+               QPointF(e.attribute("x").toDouble(), e.attribute("y").toDouble()),
+               e.attribute("weight").toInt())
+{}
+
 
 
 void Item_point::newBrush(QColor brushColor, int penWidth)
@@ -105,6 +122,9 @@ void Item_point::showWeight(bool isDisplayed)
 }
 
 
+/**
+ * @brief Item_point::serialize2xml
+ */
 void Item_point::serialize2xml(QXmlStreamWriter* w)
 {
     w->writeStartElement("Point");

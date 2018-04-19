@@ -17,19 +17,37 @@
 #include "item_arc.h"
 #include "gribouillotscene.h"
 
-Item_arc::Item_arc(QPointF center, QRectF rect, qreal startAngle, qreal spanAngle,
+Item_arc::Item_arc(QPointF center, qreal radius, qreal startAngle, qreal spanAngle,
                    QColor penColor, int penWidth)
 {
     //Focusable: to respond to user's keyboard activity
     setFlag(QGraphicsItem::ItemIsFocusable);
 
     setPos(center);
-    arcRect = rect;
+    arcRect = QRectF(-radius, -radius, radius*2, radius*2);
     this->startAngle = startAngle;
     this->spanAngle = spanAngle;
 
     newPen(penColor, penWidth);//will call createBoundingPath
 }
+
+
+/**
+ * @brief       Construct an arc from saved XML data
+ * @details     Be sure to call with a QDomElement containing
+ *              arc data!
+ * @attention   see also serialize2xml
+ */
+Item_arc::Item_arc(QDomElement e) :
+    Item_arc(QPointF(e.attribute("x").toDouble(), e.attribute("y").toDouble()),
+             e.attribute("radius").toDouble(),
+             e.attribute("startAngle").toDouble(),
+             e.attribute("spanAngle").toDouble(),
+             QColor(e.attribute("color")),
+             e.attribute("penWidth").toInt())
+{}
+
+
 
 
 /**

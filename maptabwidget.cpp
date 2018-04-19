@@ -22,9 +22,11 @@ MapTabWidget::MapTabWidget(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect (ui->pxSpinBox, SIGNAL(valueChanged(double)), this, SLOT(newPxValue(double)));
-    connect (ui->kmSpinBox, SIGNAL(valueChanged(double)), this, SLOT(newKmValue(double)));
-    connect (ui->mKmComboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(newScaleUnit()));
+    connect (ui->pxSpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged),
+                this, &MapTabWidget::newPxValue);
+    connect (ui->kmSpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged),
+                this, &MapTabWidget::newKmValue);
+    connect (ui->mKmComboBox, &QComboBox::currentTextChanged, this, &MapTabWidget::newScaleUnit);
 
 }
 

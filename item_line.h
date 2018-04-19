@@ -10,6 +10,7 @@
 #ifndef ITEM_LINE_H
 #define ITEM_LINE_H
 
+
 #include "item_segment.h"
 
 class Item_line : public Item_segment
@@ -24,7 +25,8 @@ public:
         // Enable the use of qgraphicsitem_cast with this item.
         return LINE;
     }
-    explicit Item_line(QColor penColor, int penWidth, QPointF points[]);
+    explicit Item_line(QColor penColor, int penWidth, QVector<QPointF> points);
+    explicit Item_line(QDomElement e);
     ~Item_line(){}
 
     void serialize2xml(QXmlStreamWriter* w);

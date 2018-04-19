@@ -15,14 +15,14 @@
 
 #include "item_spiraldrawer.h"
 
-Item_spiralDrawer::Item_spiralDrawer(int penWidth, QColor c, QGraphicsItem *parent):
+Item_spiralDrawer::Item_spiralDrawer(QColor penColor, int penWidth, QGraphicsItem *parent):
     QAbstractGraphicsShapeItem(parent)
 {
     setFlag(QGraphicsItem::ItemIsFocusable);
 
     QPen pen;
     pen.setCosmetic(true);
-    pen.setColor(c);
+    pen.setColor(penColor);
     pen.setWidth(penWidth);
     pen.setStyle(Qt::DashLine);
     setPen(pen);
@@ -117,16 +117,16 @@ QString Item_spiralDrawer::computeSpiralBase()
 QVector<Item_arc *> Item_spiralDrawer::getArcs()
 {
     QVector<Item_arc *> arcs(4);
-    qreal startAngle, spanAngle;
+    qreal radius, startAngle, spanAngle;
 
     for(int i = 0; i < 4; ++i)
     {
+        radius = Item_spiral::computeArcRadius(i, side);
         Item_spiral::computeArcAngles(side[i], side[(i+1)%4],
                                       startAngle, spanAngle);
+
         arcs[i] = new Item_arc(side[i].p2(),
-                               Item_spiral::computeArcRect(i, side),
-                               startAngle,
-                               spanAngle);
+                               radius, startAngle, spanAngle);
     }
 
     return arcs;
@@ -195,11 +195,6 @@ void Item_spiralDrawer::paint(QPainter *painter, const QStyleOptionGraphicsItem 
         //Draw side[0]
         painter->drawLine(QLineF(p1,p2));
 
-        /*
-        painter->setPen(Qt::blue);
-        painter->drawRect(Item_spiral::computeArcRect(0, side));
-        painter->setPen(pen());
-        */
     }
 
     if(!side[1].isNull())
@@ -216,7 +211,8 @@ void Item_spiralDrawer::paint(QPainter *painter, const QStyleOptionGraphicsItem 
         //initialize arcHintAngle and spanAngle
         Item_spiral::computeArcAngles(side[0], side[1], arcHintAngle, spanAngle);
         //compute drawing rectangle
-        QRectF arcRect0 = Item_spiral::computeArcRect(0, side);
+        qreal radius = Item_spiral::computeArcRadius(0, side);
+        QRectF arcRect0 = QRectF(-radius, -radius, radius*2, radius*2);
         arcRect0.translate(p1);//p1 == side[0].p2
 
         /*
@@ -241,7 +237,6 @@ void Item_spiralDrawer::paint(QPainter *painter, const QStyleOptionGraphicsItem 
         painter->drawRect(arcRect0);
         painter->setPen(pen());
         */
-
     }
 
     if(!side[2].isNull())
@@ -268,9 +263,7 @@ void Item_spiralDrawer::mousePressEvent(QGraphicsSceneMouseEvent *event)
         setPos(event->scenePos());
     }
     else if(remainingClicks == 0)
-    {
         emit endDrawing(computeSpiralBase());
-    }
 
     event->accept();
 
@@ -295,9 +288,7 @@ void Item_spiralDrawer::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
                 side[1].setLength(length);
             }
             else
-            {
                 side[1] = QLineF(side[0].p2(), event->scenePos());
-            }
 
             break;
         case 1:
@@ -311,9 +302,7 @@ void Item_spiralDrawer::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
                 side[2].setLength(length);
             }
             else
-            {
                 side[2] = QLineF(side[1].p2(), event->scenePos());
-            }
             break;
 
         default:

@@ -34,8 +34,7 @@ public:
         return SPIRAL_DRAWER;
     }
 
-    explicit Item_spiralDrawer(int penWidth, QColor c,
-                               QGraphicsItem* parent = nullptr);
+    explicit Item_spiralDrawer(QColor penColor, int penWidth, QGraphicsItem *parent = nullptr);
     ~Item_spiralDrawer(){}
 
     QVector<Item_arc *> getArcs();

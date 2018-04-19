@@ -46,30 +46,6 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="visibilityCheckBox">
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
-     <property name="text">
-      <string notr="true"/>
-     </property>
-     <property name="icon">
-      <iconset>
-       <normalon>:/Resources/Icons/visibility.png</normalon>
-      </iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>20</width>
-       <height>20</height>
-      </size>
-     </property>
-     <property name="checked">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QLabel" name="opacityLabel">
      <property name="text">
       <string>Opacity:</string>
