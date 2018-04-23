@@ -36,7 +36,7 @@ public:
     qreal getRadius() const;
     qreal getSpanAngle() const;
     void serialize2xml(QXmlStreamWriter* w);
-    QString status(qreal scale);
+    QString status(qreal scale, QString scaleUnit);
 
 protected:
     QRectF boundingRect() const Q_DECL_OVERRIDE;

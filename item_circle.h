@@ -34,7 +34,7 @@ public:
     void newPen(QColor penColor, int penWidth);
     qreal getRadius() const;
     void serialize2xml(QXmlStreamWriter* w);
-    QString status(qreal scale);
+    QString status(qreal scale, QString scaleUnit);
 
 protected:
     QRectF boundingRect() const Q_DECL_OVERRIDE;

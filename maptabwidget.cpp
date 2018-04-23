@@ -84,6 +84,14 @@ qreal MapTabWidget::getKmPxScale()
         return kmPxScale;
 }
 
+QString MapTabWidget::getScaleUnit()
+{
+    return ui->mKmComboBox->currentText();
+}
+
+
+
+
 
 /************************** Public slots ***************************/
 /**

@@ -88,12 +88,13 @@ qreal Item_arc::getSpanAngle() const
 /**
  * @brief   return a message to be displayed in the statusBar
  */
-QString Item_arc::status(qreal scale)
+QString Item_arc::status(qreal scale, QString scaleUnit)
 {
     qreal arcPixelLength = 2*M_PI*getRadius()*(spanAngle/(qreal)360);
+    arcPixelLength = qAbs(arcPixelLength)*scale;//in scaleUnit
 
     return "Span angle: "+QString::number(qAbs(spanAngle), 'f', 1)+"°"
-           +"  Arc length: "+QString::number(qAbs(arcPixelLength)*scale, 'f', 1)+"km ";
+           +"  Arc length: "+QString::number(arcPixelLength, 'f', 1)+scaleUnit;
 }
 
 

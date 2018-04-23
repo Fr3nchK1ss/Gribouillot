@@ -80,17 +80,13 @@ void Item_spiral::newPen(QColor penColor, int penWidth)
 
 
 /**
- * @brief   return a message to be displayed in the statusBar
+ * @brief   display the span length of the spiral.
+ * @details span = side1 +
  */
-QString Item_spiral::status(qreal scale)
+QString Item_spiral::status(qreal scale, QString scaleUnit)
 {
-    return QObject::tr("Spiral:  ")+
-           "side1 = "+QString::number(qAbs(baseSide[0].length())*scale, 'f', 1)+"km  "+
-           "side2 = "+QString::number(qAbs(baseSide[1].length())*scale, 'f', 1)+"km  "+
-           "side3 = "+QString::number(qAbs(baseSide[2].length())*scale, 'f', 1)+"km  "+
-           "side4 = "+QString::number(qAbs(baseSide[3].length())*scale, 'f', 1)+"km  ";
+    return QObject::tr("Spiral selected");
 
-    return QString();
 }
 
 

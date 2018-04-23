@@ -529,6 +529,12 @@ void Gribouillot::sceneSelectionChanged() const
     QList<QGraphicsItem*> selectedItems = scene->selectedItems();
     int selectedCount = selectedItems.size();
 
+    //Get scale info to display distances in status bar
+    qreal scale = ui->mapTabWidget->getKmPxScale();
+    QString scaleUnit = ui->mapTabWidget->getScaleUnit();
+    if (scaleUnit == "m")
+        scale*=1000;
+
     if (currentDrawing == NONE)
     {//Don't interfere with drawing tips
 
@@ -555,13 +561,13 @@ void Gribouillot::sceneSelectionChanged() const
         else if( item->type() == SEGMENT )
         {
             Item_segment* segment = qgraphicsitem_cast<Item_segment *>(item);
-            statusMsg = segment->status(ui->mapTabWidget->getKmPxScale());
+            statusMsg = segment->status(scale, scaleUnit);
 
         }
         else if( item->type() == CIRCLE )
         {
             Item_circle* circle = qgraphicsitem_cast<Item_circle *>(item);
-            statusMsg = circle->status(ui->mapTabWidget->getKmPxScale());
+            statusMsg = circle->status(scale, scaleUnit);
             if(gpsEnabled)
                 statusMsg += tr("    Center: ")+gpsDialog->getFix(circle->pos());
 
@@ -569,7 +575,7 @@ void Gribouillot::sceneSelectionChanged() const
         else if( item->type() == ARC )
         {
             Item_arc* arc = qgraphicsitem_cast<Item_arc *>(item);
-            statusMsg = arc->status(ui->mapTabWidget->getKmPxScale());
+            statusMsg = arc->status(scale, scaleUnit);
 
         }
         else if( item->type() == PIXMAP )
@@ -582,7 +588,7 @@ void Gribouillot::sceneSelectionChanged() const
         else if( item->type() == SPIRAL )
         {
             Item_spiral* spiral = qgraphicsitem_cast<Item_spiral *>(item);
-            statusMsg = spiral->status(ui->mapTabWidget->getKmPxScale());
+            statusMsg = spiral->status(scale, scaleUnit);
 
         }
 
@@ -593,37 +599,29 @@ void Gribouillot::sceneSelectionChanged() const
          * When more than one item is selected, count items or display
          * some other informations in special cases.
          */
-        int points, circles, lines, arcs, pixmaps;
-        points = circles = lines = arcs = pixmaps = 0;
 
-        //Variables which may be needed
         QList<Item_point*> pointsList;
         QList<Item_segment*> linesList;
+        QList<Item_circle*> circlesList;
+        //...
 
         //Count points, lines, etc
         foreach(QGraphicsItem* item, selectedItems)
         {
             if( item->type() == POINT_W )
-            {
-                //May be needed to calculate the center of several points:
                 pointsList << qgraphicsitem_cast<Item_point*>(item);
-                ++points;
-            }
-            else if( item->type() == SEGMENT )
-            {
+
+            else if( item->type() == SEGMENT || item->type() == LINE )
                 linesList << qgraphicsitem_cast<Item_segment*>(item);
-                lines++;
-            }
-            else if( item->type() == LINE )
-            {
-                linesList << dynamic_cast<Item_segment*>(item);
-                lines++;
-            }
-            //else if( item->type() == CIRCLE )...
+
+            else if( item->type() == CIRCLE )
+                circlesList << qgraphicsitem_cast<Item_circle*>(item);
+
+            //else if (item->type() == ...
         }
 
-        if ( lines == 2 && selectedCount == 2 )
-        {//Calculate the angle between the 2 lines and their intersection point.
+        if ( selectedCount == 2 && linesList.count() == 2 )
+        {//Show the angle between the 2 lines and their intersection point.
 
             QPointF iPoint;
             QLineF line1 = linesList.at(0)->line();
@@ -650,6 +648,44 @@ void Gribouillot::sceneSelectionChanged() const
                  line1.intersect(line2,&iPoint) != QLineF::NoIntersection)
                 statusMsg += "    Intersect in "+gpsDialog->getFix(iPoint);
 
+        }
+        else if ( selectedCount == 2 && linesList.count() == 1 && pointsList.count() == 1 )
+        {//Show the distance between a point and a line
+
+            QPointF p = pointsList.at(0)->scenePos();
+            QLineF l = linesList.at(0)->line();
+            QPointF p1 = l.p1();
+            QPointF p2 = l.p2();
+
+            /*
+             * Formula is d = | (y2 - y1)*x - (x2 - x1)*y + x2y1 - y2x1 |
+             *                -------------------------------------------
+             *                      V[ (y2-y1)² - (x2-x1)² ]
+             */
+            qreal distance = qAbs( (p2.y()-p1.y()) * p.x() - (p2.x()-p1.x()) * p.y() + p2.x()*p1.y() - p2.y()*p1.x() )
+                                    / qSqrt( qPow((p2.y() - p1.y()), 2) + qPow((p2.x() - p1.x()), 2) );
+
+            statusMsg = tr("Orthogonal distance between point and line: ")
+                        +QString::number(distance*scale, 'f', 1)
+                        +scaleUnit;
+
+        }
+        else if ( selectedCount == 2 && pointsList.count() == 1 && circlesList.count() == 1 )
+        {//Show the distance between a point and a circle
+
+            QPointF point = pointsList.at(0)->scenePos();
+            Item_circle* circle = circlesList.at(0);
+            QPointF center = circle->scenePos();
+
+            qreal distance2center = QLineF(point, center).length();
+            qreal distance2border = distance2center - circle->getRadius();
+
+            statusMsg = tr("Distance from selected point to circle center: ")
+                        +QString::number(distance2center*scale, 'f', 1)
+                        +scaleUnit
+                        +tr("; to circle border: ")
+                        +QString::number(distance2border*scale, 'f', 1)
+                        +scaleUnit;
         }
         else
            statusMsg = QString::number(selectedCount)+"  selected items";

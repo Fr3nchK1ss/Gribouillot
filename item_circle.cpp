@@ -85,12 +85,12 @@ void Item_circle::serialize2xml(QXmlStreamWriter* w)
 /**
  * @brief   return a message to be displayed in the statusBar
  */
-QString Item_circle::status(qreal scale)
+QString Item_circle::status(qreal scale, QString scaleUnit)
 {
-    qreal kmRadius = rect().width()/2*scale;
+    qreal scaledRadius = rect().width()/2*scale;
 
-    return QObject::tr("Radius: ")+QString::number(kmRadius, 'f', 1)+" km"
-            +QObject::tr("    Circumference: ")+QString::number(M_PI*kmRadius, 'f', 1)+" km";
+    return QObject::tr("Radius: ")+QString::number(scaledRadius, 'f', 1)+scaleUnit+"    "
+            +QObject::tr("Circumference: ")+QString::number(M_PI*scaledRadius, 'f', 1)+scaleUnit;
 
 }
 

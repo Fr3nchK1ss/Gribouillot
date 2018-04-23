@@ -37,7 +37,7 @@ public:
     static void computeArcAngles(QLineF sideA, QLineF sideB,
                                  qreal &startAngle, qreal &spanAngle);
     void serialize2xml(QXmlStreamWriter* w);
-    QString status(qreal scale);
+    QString status(qreal kmScale, QString scaleUnit);
 
 protected:
     QRectF boundingRect() const Q_DECL_OVERRIDE;

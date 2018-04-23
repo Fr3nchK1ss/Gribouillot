@@ -32,7 +32,7 @@ public:
 
     void newPen(QColor penColor, int penWidth);
     void serialize2xml(QXmlStreamWriter* w);//override item_line::serialize
-    QString status(qreal scale);//override item_line::status
+    QString status(qreal scale, QString scaleUnit);//override item_line::status
 
 protected:
     QRectF boundingRect() const Q_DECL_OVERRIDE;

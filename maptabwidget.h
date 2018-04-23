@@ -38,6 +38,7 @@ public:
     explicit MapTabWidget(QWidget *parent = nullptr);
     ~MapTabWidget();
     qreal getKmPxScale();
+    QString getScaleUnit();
 
 public slots:
     void newScaleMeasure(double);

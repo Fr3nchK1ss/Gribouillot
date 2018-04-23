@@ -94,11 +94,11 @@ void Item_segment::serialize2xml(QXmlStreamWriter* w)
 /**
  * @brief   return a message to be displayed in the statusBar
  */
-QString Item_segment::status(qreal scale)
+QString Item_segment::status(qreal scale, QString scaleUnit)
 {
-    qreal kmLength = line().length()*scale;
+    qreal length = line().length()*scale;
 
-    return QObject::tr("Segment with length ")+QString::number(kmLength, 'f', 1)+" km";
+    return QObject::tr("Segment with length ")+QString::number(length, 'f', 1)+scaleUnit;
 
 }
 
