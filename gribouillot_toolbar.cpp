@@ -24,7 +24,7 @@
  */
 void Gribouillot::newMoveOnScene(QPointF position)
 {
-    if (ui->actionCursorSelect->isChecked() == true
+    if (ui->actionCursorSelect->isChecked()
         && gpsEnabled
         && ui->gribTabWidget->currentIndex() == 0 )
     {
@@ -37,7 +37,7 @@ void Gribouillot::newMoveOnScene(QPointF position)
 /**
  * @brief   Send the mouse clicks from scene BEFORE default scene processing, which
  *          is item selection.
- * @details Important for item drawing starting with "if ( isOnlySelected(...) )"
+ * @details Important for item drawing starting with "if ( scene->isOnlySelected(...) )"
  *          because a click on scene can select an item different from user's first
  *          choice.
  */
@@ -57,27 +57,35 @@ void Gribouillot::newSceneClickPreSelect(QPointF position)
             break;
 
         case PARALLEL:
-            if( isOnlySelected({SEGMENT, LINE}, 1) )
+            if( scene->isOnlySelected({SEGMENT, LINE}, 1) )
                 //A line or segment was previously chose by user
-                currentLayer->drawParallel(drawingColor, drawingWidth, position);
+                currentLayer->drawParallel(drawingColor, drawingWidth, position,
+                                           getSelectedLineF());
 
             /*don't reset tool so several parallels can be drawn in serie.*/
             break;
 
         case PERPENDICULAR:
-            if( isOnlySelected({SEGMENT, LINE}, 1) )
+            if( scene->isOnlySelected({SEGMENT, LINE}, 1) )
+            {
                 //A line or segment was previously chose by user
-                currentLayer->drawPerpendicular(drawingColor, drawingWidth, position);
+                Item_segment* selectedSegment = dynamic_cast<Item_segment*>(
+                                                        scene->selectedItems().last());
+                currentLayer->drawPerpendicular(drawingColor, drawingWidth,
+                                                position, selectedSegment);
 
-            /*don't reset tool so that several perpendiculars can be drawn in serie.*/
+                selectedSegment->setSelected(true);//re-select user's line
+
+                /*don't reset tool so that several perpendiculars can be drawn in serie.*/
+            }
             break;
 
         case CIRCLE_FROMSELECTEDRADIUS:
-            if( isOnlySelected({SEGMENT}, 1) )
+            if( scene->isOnlySelected({SEGMENT}, 1) )
             {//A radius was previously selected. This click defines the side of the center.
                 center =
-                currentLayer->drawCircleFromRadius(drawingColor, drawingWidth,
-                                                   position);
+                currentLayer->drawCircleFromRadius(drawingColor, drawingWidth, position,
+                                                   getSelectedLineF());
 
                 on_actionCircleSelectRadius_triggered();
             }
@@ -160,6 +168,11 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
     //Some visual helps are 'self-drawing' items catching the mouse
     QGraphicsItem* mG = scene->mouseGrabberItem();
 
+    qreal scale = ui->mapTabWidget->getKmPxScale();
+    QString scaleUnit = ui->mapTabWidget->getScaleUnit();
+    if (scaleUnit == "m")
+        scale*=1000;
+
     switch (currentDrawing)
     {
         case SEGMENT:
@@ -190,7 +203,7 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
             if ( mG == nullptr ||
                  (mG->type() != POINT_ONRAIL && mG->type() != ARC_DRAWER))
             {
-                if( isOnlySelected({SEGMENT, LINE}, 1) )
+                if( scene->isOnlySelected({SEGMENT, LINE}, 1) )
                 {
                     /*
                      * A line or segment is selected by this click.
@@ -228,10 +241,10 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
             break;
 
         case BISECTION:
-            if( isOnlySelected({SEGMENT}, 1) )
+            if( scene->isOnlySelected({SEGMENT}, 1) )
             {
                 //A segment is selected by this click. Draw bisection immediately.
-                currentLayer->drawBisection(drawingColor, drawingWidth);
+                currentLayer->drawBisection(drawingColor, drawingWidth, getSelectedLineF());
 
                 //Reset selection (selected segment) and drawing tool
                 scene->clearSelection();
@@ -241,7 +254,7 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
 
         case PARALLEL:
         case PERPENDICULAR:
-            if( isOnlySelected({SEGMENT, LINE}, 1) )
+            if( scene->isOnlySelected({SEGMENT, LINE}, 1) )
                 moreDrawingTips();//just display next hint message
             break;
 
@@ -259,15 +272,17 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
             break;
 
         case CIRCLE_FROMSELECTEDRADIUS:
-            if( isOnlySelected({SEGMENT}, 1) )
+            if( scene->isOnlySelected({SEGMENT}, 1) )
                 moreDrawingTips();//just display next hint message
             break;
 
         case CIRCLE_FROMRADIUSVALUE:
+
+
             center =
             currentLayer->drawCircleFromRadius(drawingColor, drawingWidth,
-                                                 adjustClickToPoint(position),//center coordinates
-                                                 ui->mapTabWidget->getKmPxScale());
+                                                adjustClickToPoint(position),//center coordinates
+                                                scale, scaleUnit);
             break;
 
         case CIRCLE_FROMDIAMETER:
@@ -282,10 +297,11 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
             break;
 
         case CIRCLE_FROMSELECTEDDIAMETER:
-            if( isOnlySelected({SEGMENT}, 1) )
+            if( scene->isOnlySelected({SEGMENT}, 1) )
             {
                 //A diameter is selected by this click. Draw the circle immediately.
-                currentLayer->drawCircleFromDiameter(drawingColor, drawingWidth);
+                currentLayer->drawCircleFromDiameter(drawingColor, drawingWidth,
+                                                     getSelectedLineF());
 
                 //Reset drawing tool
                 on_actionCircleSelectDiameter_triggered();
@@ -306,7 +322,7 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
         case ARC_FROMCIRCLE:
             if ( mG == nullptr || mG->type() != ARC_DRAWER )
             {
-                if ( isOnlySelected({CIRCLE},1) )
+                if ( scene->isOnlySelected({CIRCLE},1) )
                     visualHelp_arcFromCircle();//start new ARC_DRAWER
                 //else wait for user to pick a circle
             }
@@ -375,9 +391,9 @@ bool Gribouillot::moreCoordsNeeded(QPointF position)
         return false;
     }
     else
-    {   //This else can be reach calling moreDrawingTips()
+        //This else can be reach calling moreDrawingTips()
         return false;
-    }
+
 }
 
 
@@ -392,38 +408,6 @@ bool Gribouillot::moreDrawingTips()
 
 
 
-/**
- * @brief   Utility function to find out if specific items are selected
- * @details if targetCount != -1 (default), an exact count is required
- */
-bool Gribouillot::isOnlySelected(QVector<GribouillotItem> types, int targetCount)
-{
-    QList<QGraphicsItem*> selected = scene->selectedItems();
-    int sceneCount = 0;
-
-    foreach(QGraphicsItem* item, selected)
-    {
-        if ( types.contains((GribouillotItem)item->type()) )
-            sceneCount++;
-    }
-
-    if (sceneCount == selected.size())
-    {//All selected items are of correct types
-
-        if(targetCount != -1)
-        {//An exact count of items is required
-            if( sceneCount == targetCount)
-                return true;//ok
-            else
-                return false;
-        }
-        else
-            return true;
-    }
-    else//Some selected items are not of the correct type
-        return false;
-
-}
 
 
 
@@ -432,12 +416,12 @@ bool Gribouillot::isOnlySelected(QVector<GribouillotItem> types, int targetCount
  * @details Check if the user's click selected a point. If this is true, use
  *          the coordinates of the point as position instead of the exact
  *          scene position of the click.
-
+ * TODO TODO: would work only if POINT_W are enabled!!
  */
 QPointF Gribouillot::adjustClickToPoint(QPointF pos)
 {
     //check if this click has selected a point
-    if (isOnlySelected({POINT_W}, 1))
+    if (scene->isOnlySelected({POINT_W}, 1))
     {
         //replace 'position' by the coordinate of the selected point
         pos = currentLayer->selectedItems().at(0)->scenePos();
@@ -446,6 +430,23 @@ QPointF Gribouillot::adjustClickToPoint(QPointF pos)
 
     return pos;
 
+}
+
+
+/**
+ * @brief   Extract the lineF from selected item_segment or item_line
+ * @details Only called after an if(inOnlySelected({SEGMENT, LINE})) to ensure
+ *          that line != null
+ */
+QLineF58 Gribouillot::getSelectedLineF()
+{
+    QLineF58 selectedLineF = QLineF58();
+
+    Item_segment* selected = dynamic_cast<Item_segment*>(scene->selectedItems().last());
+    if (selected != nullptr)
+        selectedLineF = static_cast<QLineF58>(selected->line());
+
+    return selectedLineF;
 }
 
 
@@ -482,37 +483,36 @@ void Gribouillot::keyTFromScene()
 
         if (dialog.exec() == QDialog::Accepted)
         {
-             int width = dialog.getThicknessValue();//Between 1 and 30
+            int width = dialog.getThicknessValue();//Between 1 and 30
 
-             foreach(QGraphicsItem* item, currentLayer->selectedItems())
-             {
-                 if(item->type() == POINT_W )
-                 {
-                     Item_point* p = qgraphicsitem_cast<Item_point*>(item);
-                     p->newBrush(p->brush().color(), width);
-                 }
-                 else if (item->type() == LINE || item->type() == SEGMENT)
-                 {
-                     Item_segment* l = dynamic_cast<Item_segment*>(item);
-                     l->newPen(l->pen().color(), width);
-                 }
-                 else if (item->type() == CIRCLE)
-                 {
-                     Item_circle* c = qgraphicsitem_cast<Item_circle*>(item);
-                     c->newPen(c->pen().color(), width);
-                 }
-                 else if (item->type() == ARC)
-                 {
-                     Item_arc* a = qgraphicsitem_cast<Item_arc*>(item);
-                     a->newPen(a->pen().color(), width);
-                 }
-                 else if (item->type() == SPIRAL)
-                 {
-                     Item_spiral* s = qgraphicsitem_cast<Item_spiral*>(item);
-                     s->newPen(s->pen().color(), width);
-                 }
-
-              }
+            foreach(QGraphicsItem* item, currentLayer->selectedItems())
+            {
+                if(item->type() == POINT_W )
+                {
+                 Item_point* p = qgraphicsitem_cast<Item_point*>(item);
+                 p->newBrush(p->brush().color(), width);
+                }
+                else if (item->type() == LINE || item->type() == SEGMENT)
+                {
+                 Item_segment* l = dynamic_cast<Item_segment*>(item);
+                 l->newPen(l->pen().color(), width);
+                }
+                else if (item->type() == CIRCLE)
+                {
+                 Item_circle* c = qgraphicsitem_cast<Item_circle*>(item);
+                 c->newPen(c->pen().color(), width);
+                }
+                else if (item->type() == ARC)
+                {
+                 Item_arc* a = qgraphicsitem_cast<Item_arc*>(item);
+                 a->newPen(a->pen().color(), width);
+                }
+                else if (item->type() == SPIRAL)
+                {
+                 Item_spiral* s = qgraphicsitem_cast<Item_spiral*>(item);
+                 s->newPen(s->pen().color(), width);
+                }
+            }
         }
     }
 }
@@ -599,7 +599,6 @@ void Gribouillot::sceneSelectionChanged() const
          * When more than one item is selected, count items or display
          * some other informations in special cases.
          */
-
         QList<Item_point*> pointsList;
         QList<Item_segment*> linesList;
         QList<Item_circle*> circlesList;
@@ -612,7 +611,7 @@ void Gribouillot::sceneSelectionChanged() const
                 pointsList << qgraphicsitem_cast<Item_point*>(item);
 
             else if( item->type() == SEGMENT || item->type() == LINE )
-                linesList << qgraphicsitem_cast<Item_segment*>(item);
+                linesList << dynamic_cast<Item_segment*>(item);
 
             else if( item->type() == CIRCLE )
                 circlesList << qgraphicsitem_cast<Item_circle*>(item);
@@ -708,7 +707,7 @@ void Gribouillot::visualHelp_arcFromCircle()
                                 scene->selectedItems().last());
 
     //Disable any new circle selection
-    currentLayer->enableItems({});
+    scene->enableOnlyItems({});
     //Show a visual help to draw the arc from the circle
     Item_arcDrawer* helper = new Item_arcDrawer(circle);
     //The scene, not the current layer, must take care of this helper
@@ -726,13 +725,9 @@ void Gribouillot::visualHelp_arcFromCircle()
  */
 void Gribouillot::visualHelp_pointOnRail()
 {
-    //Get selected circle
-    Item_segment* segment = dynamic_cast<Item_segment*>(
-                                scene->selectedItems().last());
-
     //Show a visual help to draw the arc from the circle
     Item_pointOnRail* helper = new Item_pointOnRail(drawingWidth,
-                                                    segment->line());
+                                                    getSelectedLineF());
     //The scene, not the current layer, must take care of this helper
     scene->addItem(helper);
     //Grab mouse in order to self-draw (respond to mouseMove)
@@ -850,7 +845,7 @@ void Gribouillot::on_actionChooseColor_triggered()
              }
         }
     }
-    //else change the color of the drawing tool.
+    //else change the color for future drawings.
     else
     {
         const QColor color = QColorDialog::getColor(drawingColor,
@@ -869,12 +864,9 @@ void Gribouillot::on_actionChooseColor_triggered()
 
 /**
  * @brief   switch the drawing width to 3, 5, 7px
- * @details can be called by user using the click or the 't' key to change
- *          the width of the currently selected items.
  */
 void Gribouillot::on_actionChooseWidth_triggered()
 {
-    //TODO unselect all items
     drawingWidth = (drawingWidth+2)%8;//drawingWidth is 1 or 3 or 5 or 7
     QString iconPath = ":/Resources/Icons/draw-width-"+QString::number(drawingWidth)+".png";
     ui->actionChooseWidth->setIcon(QIcon(QPixmap(iconPath)));
@@ -938,7 +930,7 @@ void Gribouillot::on_actionSegment_triggered()
 {
     setDrawingView();
     scene->clearSelection();
-    currentLayer->enableItems({POINT_W});
+    scene->enableOnlyItems({POINT_W});
     currentDrawing = SEGMENT;
     drawingTips = {tr("Segment: pick up a first end."),
                    tr("Segment: pick up the other end.")};
@@ -956,7 +948,7 @@ void Gribouillot::on_actionLine_triggered()
     setDrawingView();
     scene->clearSelection();
     currentDrawing = LINE;
-    currentLayer->enableItems({POINT_W});
+    scene->enableOnlyItems({POINT_W});
     drawingTips = {tr("Line: pick up a first point."),
                    tr("Line: pick up a second point.")};
 
@@ -972,7 +964,7 @@ void Gribouillot::on_actionHorizontalLine_triggered()
 {
     setDrawingView();
     scene->clearSelection();
-    currentLayer->enableItems({POINT_W});
+    scene->enableOnlyItems({POINT_W});
     currentDrawing = HORIZONTAL;
 
     statusBar()->showMessage(tr("Horizontal line: pick up a waypoint."));
@@ -986,7 +978,7 @@ void Gribouillot::on_actionVerticalLine_triggered()
 {
     setDrawingView();
     scene->clearSelection();
-    currentLayer->enableItems({POINT_W});
+    scene->enableOnlyItems({POINT_W});
     currentDrawing = VERTICAL;
 
     statusBar()->showMessage(tr("Vertical line: pick up a waypoint."));
@@ -1001,7 +993,7 @@ void Gribouillot::on_actionParallel_triggered()
     setDrawingView();
     scene->clearSelection();
     currentDrawing = PARALLEL;
-    currentLayer->enableItems({SEGMENT, LINE});
+    scene->enableOnlyItems({SEGMENT, LINE});
     drawingTips= {tr("Parallel: select the reference line."),
                   tr("Parallel: pick up a way point.")};
 
@@ -1018,7 +1010,7 @@ void Gribouillot::on_actionPerpendicular_triggered()
     setDrawingView();
     scene->clearSelection();
     currentDrawing = PERPENDICULAR;
-    currentLayer->enableItems({SEGMENT, LINE});
+    scene->enableOnlyItems({SEGMENT, LINE});
     drawingTips= {tr("Perpendicular: select the reference line."),
                   tr("Perpendicular: pick up a way point.")};
 
@@ -1035,7 +1027,7 @@ void Gribouillot::on_actionBisection_triggered()
     setDrawingView();
     scene->clearSelection();
     currentDrawing = BISECTION;
-    currentLayer->enableItems({SEGMENT});
+    scene->enableOnlyItems({SEGMENT});
 
     statusBar()->showMessage(tr("Bisection: select a segment."));
 
@@ -1049,7 +1041,7 @@ void Gribouillot::on_actionAngleLine_triggered()
 {
     setDrawingView();
     currentDrawing = LINE_FROMANGLE;
-    currentLayer->enableItems({SEGMENT, LINE});
+    scene->enableOnlyItems({SEGMENT, LINE});
     drawingTips= {tr("Angle: select the reference line"),
                   tr("Angle: pick up the center of the angle"),
                   tr("Angle: click to draw.")};
@@ -1067,7 +1059,7 @@ void Gribouillot::on_actionCircleCenterPoint_triggered()
     setDrawingView();
     scene->clearSelection();
     currentDrawing = CIRCLE_FROMCENTERPOINT;
-    currentLayer->enableItems({POINT_W});
+    scene->enableOnlyItems({POINT_W});
     drawingTips = {tr("Circle: define a center."),
                    tr("Circle: pick up a point of the circumference.")};
 
@@ -1084,7 +1076,7 @@ void Gribouillot::on_actionCircleSelectRadius_triggered()
     setDrawingView();
     scene->clearSelection();
     currentDrawing = CIRCLE_FROMSELECTEDRADIUS;
-    currentLayer->enableItems({SEGMENT});
+    scene->enableOnlyItems({SEGMENT});
     drawingTips = {tr("Circle: select a segment."),
                    tr("Circle: click around the end where the center should be.")};
 
@@ -1101,7 +1093,7 @@ void Gribouillot::on_actionCircleRadiusValue_triggered()
     setDrawingView();
     scene->clearSelection();
     currentDrawing = CIRCLE_FROMRADIUSVALUE;
-    currentLayer->enableItems({POINT_W});
+    scene->enableOnlyItems({POINT_W});
 
     statusBar()->showMessage(tr("Circle: define a center."));
 }
@@ -1116,7 +1108,7 @@ void Gribouillot::on_actionCircleDiameter_triggered()
     setDrawingView();
     scene->clearSelection();
     currentDrawing = CIRCLE_FROMDIAMETER;
-    currentLayer->enableItems({POINT_W});
+    scene->enableOnlyItems({POINT_W});
     drawingTips = {tr("Circle: define the first end of the diameter."),
                    tr("Circle: define the other end of the diameter.")};
 
@@ -1132,7 +1124,7 @@ void Gribouillot::on_actionCircleSelectDiameter_triggered()
     setDrawingView();
     scene->clearSelection();
     currentDrawing = CIRCLE_FROMSELECTEDDIAMETER;
-    currentLayer->enableItems({SEGMENT});
+    scene->enableOnlyItems({SEGMENT});
 
     statusBar()->showMessage(tr("Circle: select a segment as diameter."));
 
@@ -1146,12 +1138,12 @@ void Gribouillot::on_actionCircleTriangle_triggered()
 {
     setDrawingView();
     currentDrawing = CIRCLE_FROMTRIANGLE;
-    currentLayer->enableItems({POINT_W});
+    scene->enableOnlyItems({POINT_W});
     drawingTips = {tr("Circle: Pick up a first point of the circumference."),
                    tr("Circle: Pick up a second point of the circumference."),
                    tr("Circle: Pick up a third point of the circumference.")};
 
-    if( isOnlySelected({POINT_W}, 3) )
+    if( scene->isOnlySelected({POINT_W}, 3) )
     {//Three points are selected, draw immediately
         currentLayer->drawCircleFromTriangle(drawingColor, drawingWidth);
         //Reset selection (selected points) and drawing
@@ -1173,11 +1165,11 @@ void Gribouillot::on_actionArcFromCircle_triggered()
 {
     setDrawingView();
     currentDrawing = ARC_FROMCIRCLE;
-    currentLayer->enableItems({CIRCLE});
+    scene->enableOnlyItems({CIRCLE});
     drawingTips = {tr("Arc: define the first boundary."),
                    tr("Arc: define the second boundary.")};
 
-    if( isOnlySelected({CIRCLE}, 1) )
+    if( scene->isOnlySelected({CIRCLE}, 1) )
         visualHelp_arcFromCircle();//Call helper immediately
     else
         statusBar()->showMessage(tr("Arc: Choose a circle to cut out."));
@@ -1211,8 +1203,8 @@ void Gribouillot::on_actionSpiral_triggered()
     currentDrawing = SPIRAL;
     drawingTips = {tr("Spiral: define the first center."),
                    tr("Spiral: define the second center."),
-                   tr("Spiral: define the third center."),
-                   tr("Spiral: define the fourth center."),};
+                   tr("Spiral: define the third center (or click [Enter] for a square base)"),
+                   tr("Spiral: define the fourth center (use [Maj] for perpendicular sides)."),};
 
     statusBar()->showMessage(drawingTips[0]);
 

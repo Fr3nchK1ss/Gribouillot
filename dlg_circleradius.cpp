@@ -1,11 +1,12 @@
 #include "dlg_circleradius.h"
 #include "ui_dlg_circleradius.h"
 
-Dlg_circleRadius::Dlg_circleRadius(QWidget *parent) :
+Dlg_circleRadius::Dlg_circleRadius(QWidget *parent, QString scaleUnit) :
     QDialog(parent),
     ui(new Ui::Dlg_circleRadius)
 {
     ui->setupUi(this);
+    ui->dSpinBox->setSuffix(scaleUnit);
 }
 
 Dlg_circleRadius::~Dlg_circleRadius()

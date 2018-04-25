@@ -194,7 +194,7 @@ void Gribouillot::setWorkingLayer(GribouillotLayer* layer)
             //enable item
             item->setEnabled(true);
 
-            //enable or not specifics
+            //enable or not specifics of this item
             if( item->type() == PIXMAP )
                 item->setFlag(QGraphicsItem::ItemIsMovable, belongsToLayer);
             if ( item->type() == SPIRAL)

@@ -22,6 +22,7 @@ class QLineF58 : public QLineF
 {
 public:
     QLineF58();
+    QLineF58(QLineF l);
     QLineF58(const QPointF &p1, const QPointF &p2);
     QLineF58(qreal x1, qreal y1, qreal x2, qreal y2);
 

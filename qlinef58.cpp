@@ -15,6 +15,10 @@ QLineF58::QLineF58() :
     QLineF()
 {}
 
+QLineF58::QLineF58(QLineF l) :
+    QLineF(l.p1(), l.p2())
+{}
+
 QLineF58::QLineF58(const QPointF &p1, const QPointF &p2) :
     QLineF(p1, p2)
 {}

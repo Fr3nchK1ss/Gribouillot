@@ -89,7 +89,7 @@ QString Item_circle::status(qreal scale, QString scaleUnit)
 {
     qreal scaledRadius = rect().width()/2*scale;
 
-    return QObject::tr("Radius: ")+QString::number(scaledRadius, 'f', 1)+scaleUnit+"    "
+    return QObject::tr("Circle radius: ")+QString::number(scaledRadius, 'f', 1)+scaleUnit+"  "
             +QObject::tr("Circumference: ")+QString::number(M_PI*scaledRadius, 'f', 1)+scaleUnit;
 
 }

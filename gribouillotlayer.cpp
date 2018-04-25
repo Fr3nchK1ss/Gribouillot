@@ -22,7 +22,6 @@
 #include "dlg_pointweight.h"
 #include "gribouillotlayer.h"
 #include "main.h"
-#include "qlinef58.h"
 #include "gribouillot.h"
 #include "ui_gribouillotlayer.h"
 
@@ -155,22 +154,6 @@ void GribouillotLayer::addItemToLayer(QGraphicsItem *item)
 }
 
 
-/**
- * @brief   Enable items  of this layer of types "onlyTypes".
- * @details Items become fully enabled. If onlyTypes is empty,
- *          enable all items (default behavior).
- */
-void GribouillotLayer::enableItems(QList<GribouillotItem> onlyTypes)
-{
-    foreach(QGraphicsItem* item, itemsList)
-    {
-        if(onlyTypes.isEmpty()
-           || onlyTypes.contains((GribouillotItem)item->type()))
-            item->setEnabled(true);
-        else
-            item->setEnabled(false);
-    }
-}
 
 
 /**
@@ -482,31 +465,6 @@ void GribouillotLayer::on_deleteLayerTlBtt_clicked()
 
 /*********************** drawing function ******************************/
 /**
- * @brief   utility function: get the QLineF corresponding to the currently
- *          selected segment. Caller makes sure 1 segment or line is selected.
- */
-QLineF58 GribouillotLayer::getSelectedLineF()
-{
-    QLineF58 selectedLineF = QLineF58();
-
-    for(int i=0;  i < itemsList.size(); ++i)
-    {
-        if( itemsList.at(i)->isSelected() &&
-            (itemsList.at(i)->type() == SEGMENT || itemsList.at(i)->type() == LINE))
-        {
-            //We know that the selected item is the segment/line chosen by user
-            Item_segment* selected = dynamic_cast<Item_segment*>(itemsList.at(i));
-            //get the QLineF of the Item_segment
-            selectedLineF = selected->line();
-        }
-    }
-
-    return selectedLineF;
-
-}
-
-
-/**
  * @brief   draw a point from user input.
  */
 void GribouillotLayer::drawPoint(QColor penColor, int penWidth, QPointF position, bool askWeight)
@@ -616,19 +574,6 @@ void GribouillotLayer::drawSegment(QColor penColor, int penWidth, QLineF segment
 
 
 /**
- * @brief   draw a pseudo-infinite line from 2 points.
- * @details This function is never called directly from user action, but either from
- *          drawLineFromSegment() or when loading XML data. points[] have extreme
- *          values corresponding to a pseudo-infinite line.
- */
-void GribouillotLayer::drawLine(QColor penColor, int penWidth, QVector<QPointF> points)
-{
-    addItemToLayer(new Item_line(penColor, penWidth, points));
-
-}
-
-
-/**
  * @brief   draw a pseudo-infinite line from the 2 given points.
  * @details A QGraphicsLineItem is only defined as a segment between 2 points. To extend
  *          it nicely, we find the intersections of the extended segment with a huge virtual
@@ -670,7 +615,7 @@ void GribouillotLayer::drawLineFromSegment(QColor penColor, int penWidth, QVecto
             newEnds[1] = positions[1];
     }
 
-    drawLine(penColor, penWidth, {newEnds[0], newEnds[1]});
+    addItemToLayer(new Item_line(penColor, penWidth, {newEnds[0], newEnds[1]}));
 
 }
 
@@ -710,59 +655,42 @@ void GribouillotLayer::drawVertical(QColor penColor, int penWidth, QPointF point
 /**
  * @brief   draw a parallel from currently selected line/segment and a given point
  */
-void GribouillotLayer::drawParallel(QColor penColor, int penWidth, QPointF point)
+void GribouillotLayer::drawParallel(QColor penColor, int penWidth, QPointF point, QLineF58 selectedLine)
 {
-    QLineF58 segment = getSelectedLineF();
+    /*
+     * To build the unitVector _centered on zero_, we can not use the
+     * QLineF::unitVector() function which is not centered on zero!
+     * The proper functions to use are dx() and dy()
+     */
+    QLineF unitVector = QLineF(0, 0, selectedLine.dx(), selectedLine.dy());
+    QLineF parallelVector = unitVector.translated(point);
 
-    if( !segment.isNull() )
-    {
-        /*
-         * To build the unitVector _centered on zero_, we can not use the
-         * QLineF::unitVector() function which is not centered on zero!
-         * The proper functions to use are dx() and dy()
-         */
-        QLineF unitVector = QLineF(0, 0, segment.dx(), segment.dy());
-        QLineF parallelVector = unitVector.translated(point);
-
-        drawLineFromSegment(penColor, penWidth, parallelVector);
-    }
+    drawLineFromSegment(penColor, penWidth, parallelVector);
 }
 
 
 /**
  * @brief   draw a perpendicular from currently selected line/segment and a given point
  */
-void GribouillotLayer::drawPerpendicular(QColor penColor, int penWidth, QPointF point)
+void GribouillotLayer::drawPerpendicular(QColor penColor, int penWidth, QPointF point, Item_segment* selectedSegment)
 {
-    QLineF selectedLineF;
-    Item_segment* selectedLine = nullptr;//Needed, so we can not call getSelectedLineF()
+    QLineF selectedLineF = selectedSegment->line();
 
-    for(int i=0;  i < itemsList.size(); ++i)
-    {
-        if( itemsList.at(i)->isSelected() )
-        {
-            //cast segment or line to Item_segment (qgraphicsitem_cast can not upcast)
-            selectedLine =  dynamic_cast<Item_segment*>(itemsList.at(i));
-            //get the QLineF of the Item_line
-            selectedLineF = selectedLine->line();
-        }
-    }
-
-    if (selectedLine != nullptr && !selectedLineF.isNull())
+    if (!selectedLineF.isNull())
     {
         QLineF unitVector = QLineF(0, 0, selectedLineF.dx(), selectedLineF.dy());
         QLineF normalVector = unitVector.normalVector();
         QLineF perpendicularVector = normalVector.translated(point);
 
         drawLineFromSegment(penColor, penWidth, perpendicularVector);
+
         /*
-         * At this point the new perpendicular line is automatically selected by Scene.
-         * Reselect the line/segment chosen by user. Otherwise successive clicks would
-         * give perpendiculars of perpendiculars of perpendiculars etc while we want at
-         * best to draw several perpendiculars to the SAME user selected line.
+         * At this point the new perpendicular line would be automatically selected by Scene
+         * if we didn't setEnabled(false). It would give perpendiculars of perpendiculars of
+         * perpendiculars etc while we want the user to be able to draw several perpendiculars
+         * to the one same line.
          */
-        itemsList.last()->setEnabled(false);
-        selectedLine->setSelected(true);
+        itemsList.last()->setEnabled(false);//Must be done here because of signal race condition
     }
 
 }
@@ -771,13 +699,11 @@ void GribouillotLayer::drawPerpendicular(QColor penColor, int penWidth, QPointF 
 /**
  * @brief   draw the bisection of currently selected segment
  */
-void GribouillotLayer::drawBisection(QColor penColor, int penWidth)
+void GribouillotLayer::drawBisection(QColor penColor, int penWidth, QLineF58 selectedLine)
 {
-    QLineF58 segment = getSelectedLineF();
-
-    if( !segment.isNull() )
+    if( !selectedLine.isNull() )
     {
-        QLineF halfSegment(segment.center(), segment.p2());
+        QLineF halfSegment(selectedLine.center(), selectedLine.p2());
         QLineF bisectionVector = halfSegment.normalVector();
 
         drawLineFromSegment(penColor, penWidth, bisectionVector);
@@ -806,19 +732,21 @@ void GribouillotLayer::drawCircle(QColor penColor, int penWidth, QPointF center,
  * @details the position of the center is defined by a user click on one side of the segment.
  * @return  the position of the center in scene coordinates
  */
-QPointF GribouillotLayer::drawCircleFromRadius(QColor penColor, int penWidth, QPointF position)
+QPointF GribouillotLayer::drawCircleFromRadius(QColor penColor, int penWidth,
+                                               QPointF position, QLineF58 selectedRadius)
 {
     QPointF center = QPointF();
-    QLineF58 segment = getSelectedLineF();
+    QPointF p1 = selectedRadius.p1();
+    QPointF p2 = selectedRadius.p2();
 
-    if( !segment.isNull() )
+    if( !selectedRadius.isNull() )
     {
-        QLineF clickToP1(segment.p1(), position);
-        QLineF clickTop2(segment.p2(), position);
+        QLineF clickToP1(p1, position);
+        QLineF clickTop2(p2, position);
 
-        center = clickToP1.length() < clickTop2.length() ? segment.p1() : segment.p2();
+        center = clickToP1.length() < clickTop2.length() ? p1 : p2;
 
-        drawCircle(penColor, penWidth, center, segment.length());
+        drawCircle(penColor, penWidth, center, selectedRadius.length());
     }
 
     return center;
@@ -851,9 +779,9 @@ QPointF GribouillotLayer::drawCircleFromRadius(QColor penColor, int penWidth, QV
  * @return  the position of the center in scene coordinates
  */
 QPointF GribouillotLayer::drawCircleFromRadius(QColor penColor, int penWidth, QPointF center,
-                                             qreal scale)
+                                               qreal scale, QString scaleUnit)
 {
-    Dlg_circleRadius dialog(this);
+    Dlg_circleRadius dialog(this, scaleUnit);
     qreal radius = 0;
 
     if (dialog.exec() == QDialog::Accepted)
@@ -879,15 +807,15 @@ QPointF GribouillotLayer::drawCircleFromRadius(QColor penColor, int penWidth, QP
  * @brief   draw a circle from a selected segment taken as diameter
  * \return  the position of the center in scene coordinates
  */
-QPointF GribouillotLayer::drawCircleFromDiameter(QColor penColor, int penWidth)
+QPointF GribouillotLayer::drawCircleFromDiameter(QColor penColor, int penWidth,
+                                                 QLineF58 selectedDiameter)
 {
     QPointF center = QPointF();
-    QLineF58 diameter = getSelectedLineF();
 
-    if( !diameter.isNull() )
+    if( !selectedDiameter.isNull() )
     {
-        center = diameter.center();
-        qreal radius = diameter.length()/2.0;
+        center = selectedDiameter.center();
+        qreal radius = selectedDiameter.length()/2.0;
 
         drawCircle(penColor, penWidth, center, radius);
     }
@@ -1037,9 +965,18 @@ QPointF GribouillotLayer::drawArcFromCircle(QColor penColor, int penWidth,
         //set the drawing color and thickness
         arc->newPen(penColor, penWidth);
 
-        //Delete the circle from which the arc is extracted and add arc
-        delete itemsList.takeAt( itemsList.indexOf(sourceCircle) );
+        /*
+         * Because we want to maintain independence between layers, the source circle
+         * will be destroyed if and only if it belongs to the current layer.
+         */
+        if (itemsList.contains(sourceCircle))
+        {
+            //Delete the circle from which the arc is extracted
+            delete itemsList.takeAt( itemsList.indexOf(sourceCircle) );
+        }
+
         addItemToLayer(arc);
+
     }
 
     return center;

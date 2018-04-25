@@ -12,7 +12,7 @@ class Dlg_circleRadius : public QDialog
     Q_OBJECT
 
 public:
-    explicit Dlg_circleRadius(QWidget *parent = nullptr);
+    explicit Dlg_circleRadius(QWidget *parent, QString scaleUnit);
     ~Dlg_circleRadius();
 
     qreal getRadiusValue();

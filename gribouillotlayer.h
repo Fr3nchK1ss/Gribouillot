@@ -25,6 +25,7 @@
 #include "item_segment.h"
 #include "item_spiral.h"
 #include "item_spiraldrawer.h"
+#include "qlinef58.h"
 
 namespace Ui {
 class GribouillotLayer;
@@ -47,14 +48,10 @@ public:
     QString newLabel(bool keepOldFile);
     QString askNewFile();
 
-    void enableItems(QList<GribouillotItem> onlyTypes = QList<GribouillotItem>());
     bool contains(QGraphicsItem* item);
     QList<QGraphicsItem*> selectedItems();
     bool writeXML();
     void loadXML(QString path);
-
-    //Utility for drawing
-    QLineF58 getSelectedLineF();
 
     //Points drawing
     void drawPoint(QColor penColor, int penWidth, QPointF position, bool askWeight);
@@ -65,21 +62,22 @@ public:
     //Lines drawing
     void drawSegment(QColor penColor, int penWidth, QVector<QPointF> positions);
     void drawSegment(QColor penColor, int penWidth, QLineF segment);
-    void drawLine(QColor penColor, int penWidth, QVector<QPointF> points);
     void drawLineFromSegment(QColor penColor, int penWidth, QLineF line);
     void drawLineFromSegment(QColor penColor, int penWidth, QVector<QPointF> positions);
     void drawHorizontal(QColor penColor, int penWidth, QPointF point);
     void drawVertical(QColor penColor, int penWidth, QPointF point);
-    void drawParallel(QColor penColor, int penWidth, QPointF point);
-    void drawPerpendicular(QColor penColor, int penWidth, QPointF point);
-    void drawBisection(QColor penColor, int penWidth);
+    void drawParallel(QColor penColor, int penWidth, QPointF point, QLineF58 selectedLine);
+    void drawPerpendicular(QColor penColor, int penWidth, QPointF point, Item_segment *selectedSegment);
+    void drawBisection(QColor penColor, int penWidth, QLineF58 selectedLine);
 
     //Circles drawing
     void drawCircle(QColor penColor, int penWidth, QPointF center, qreal radius);
-    QPointF drawCircleFromRadius(QColor penColor, int penWidth, QPointF position);
+    QPointF drawCircleFromRadius(QColor penColor, int penWidth, QPointF position,
+                                 QLineF58 selectedRadius);
     QPointF drawCircleFromRadius(QColor penColor, int penWidth, QVector<QPointF> positions);
-    QPointF drawCircleFromRadius(QColor penColor, int penWidth, QPointF center, qreal scale);
-    QPointF drawCircleFromDiameter(QColor penColor, int penWidth);
+    QPointF drawCircleFromRadius(QColor penColor, int penWidth, QPointF center, qreal scale,
+                                 QString scaleUnit);
+    QPointF drawCircleFromDiameter(QColor penColor, int penWidth, QLineF58 selectedDiameter);
     QPointF drawCircleFromDiameter(QColor penColor, int penWidth, QVector<QPointF> positions);
     QPointF drawCircleFromTriangle(QColor penColor, int penWidth);
     QPointF drawCircleFromTriangle(QColor penColor, int penWidth, QVector<QPointF> positions);
@@ -88,8 +86,7 @@ public:
     QPointF drawArc(QColor penColor, int penWidth, QPointF center, qreal radius,
                     qreal startAngle, qreal spanAngle);
     QPointF drawArc(QColor penColor, int penWidth, Item_arc* arc);
-    QPointF drawArcFromCircle(QColor penColor, int penWidth, Item_circle *sourceCircle,
-                           Item_arc* arc);
+    QPointF drawArcFromCircle(QColor penColor, int penWidth, Item_circle *sourceCircle, Item_arc* arc);
 
     //Spiral drawing
     void drawSpiral(QColor penColor, int penWidth, QVector<QPointF> centers);
@@ -121,7 +118,6 @@ private:
 
     void initLayer();
     void addItemToLayer(QGraphicsItem *item);
-    void addPointToLayer(QGraphicsItem *item);
 
 };
 

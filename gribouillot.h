@@ -22,6 +22,7 @@
 #include "gribouillotscene.h"
 #include "item_scaleruler.h"
 #include "minimap.h"
+#include "qlinef58.h"
 
 
 namespace Ui {
@@ -142,9 +143,8 @@ private slots:
     void newSceneClickPostSelect(QPointF position);
     bool moreCoordsNeeded(QPointF position);
     bool moreDrawingTips();
-    bool isOnlySelected(QVector<GribouillotItem> types,
-                         int targetCount = -1);
     QPointF adjustClickToPoint(QPointF pos);
+    QLineF58 getSelectedLineF();
 
     void keyDeleteFromScene();
     void keySpaceFromScene();

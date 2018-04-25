@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 }
 
 /**
- * @brief   utility function when opening an image file
+ * @brief   Utility function when opening an image file
  */
 QString getSupportedImageFormats()
 {
@@ -50,7 +50,8 @@ QString getSupportedImageFormats()
     QString defaultFilter;
 
     // Create the filter list: *.jpg;;*.png etc
-    for(int i=0; i<list.size(); i++){
+    for(int i=0; i<list.size(); i++)
+    {
         supportedFormats += "*.";
         supportedFormats += list[i].constData();
         supportedFormats += ";;";
@@ -64,6 +65,11 @@ QString getSupportedImageFormats()
     return supportedFormats;
 }
 
+
+/**
+ * @brief   Return a QString with "All images" extension.
+ * @details Used with a QFileDialog to choose an image.
+ */
 QString getDefaultImageFilter(QString supportedFormats)
 {
     int indexOfAll = supportedFormats.indexOf("All");

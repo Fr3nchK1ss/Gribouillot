@@ -16,6 +16,7 @@
 #include <QColor>
 #include <QWidget>
 
+#include "gribouillotitem.h"
 
 class GribouillotScene : public QGraphicsScene
 {
@@ -24,7 +25,8 @@ public:
     explicit GribouillotScene(QObject *parent = nullptr);
     ~GribouillotScene(){}
 
-    void disableItemsSpecifics();
+    void enableOnlyItems(QList<GribouillotItem> types = QList<GribouillotItem>());
+    bool isOnlySelected(QVector<GribouillotItem> types, int targetCount);
     QVector<QPen> getSelectPens();
 
 signals:

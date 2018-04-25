@@ -31,7 +31,7 @@ public:
         return POINT_ONRAIL;
     }
 
-    explicit Item_pointOnRail(qreal penWidth, QLineF line);
+    explicit Item_pointOnRail(qreal penWidth, QLineF58 line);
     ~Item_pointOnRail(){}
 
     QLineF getRail();

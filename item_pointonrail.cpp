@@ -13,7 +13,7 @@
 #include "item_pointonrail.h"
 
 
-Item_pointOnRail::Item_pointOnRail(qreal penWidth, QLineF line) :
+Item_pointOnRail::Item_pointOnRail(qreal penWidth, QLineF58 line) :
     QGraphicsEllipseItem()
 {
     setFlag(QGraphicsItem::ItemIgnoresTransformations);//cosmetic

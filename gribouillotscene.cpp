@@ -12,7 +12,6 @@
 #include <QGraphicsView>
 #include <QPen>
 
-#include "gribouillotitem.h"
 #include "gribouillotscene.h"
 
 GribouillotScene::GribouillotScene(QObject *parent) :
@@ -34,23 +33,45 @@ GribouillotScene::GribouillotScene(QObject *parent) :
 }
 
 
+/**
+ * @brief   Enable items of types "onlyTypes".
+ * @details Items become fully enabled.
+ */
+void GribouillotScene::enableOnlyItems(QList<GribouillotItem> types)
+{
+    foreach(QGraphicsItem* item, items() )
+    {
+        if(types.contains((GribouillotItem) item->type()) )
+            item->setEnabled(true);
+        else
+            item->setEnabled(false);
+    }
+
+}
+
+
 
 /**
- * @brief   Disable the specifics for all items of the scene.
- * @details When working in a layer, only the items of this layer
- *          can use "specifics". Other items have their "specifics"
- *          disabled.
+ * @brief   Utility function to find out if a number of specific items are selected
  */
-void GribouillotScene::disableItemsSpecifics()
+bool GribouillotScene::isOnlySelected(QVector<GribouillotItem> types, int targetCount)
 {
-    foreach( QGraphicsItem* item, items())
+    int sceneCount = 0;
+
+    foreach(QGraphicsItem* item, selectedItems())
     {
-        if( item->type() == PIXMAP )
-            item->setFlag(QGraphicsItem::ItemIsMovable, false);
-        if ( item->type() == SPIRAL)
-            item->setEnabled(false);
-        //to complete if necessary
+        if ( types.contains((GribouillotItem)item->type()) )
+            sceneCount++;
     }
+
+    if (sceneCount == targetCount)
+    {
+        //we have the exact target number of items of allowed types
+        return true;
+    }
+
+    return false;
+
 }
 
 
