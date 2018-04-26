@@ -91,7 +91,22 @@ QVector<QPen> GribouillotScene::getSelectPens()
  */
 void GribouillotScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    emit newMouseClickPreSelect(event->scenePos());
+    QPointF scenePos = event->scenePos();
+    //qDebug() << "scenePos() " << scenePos;
+
+    /*
+     * A point is represented on scene by an ellipse with a radius of a few pixels.
+     * So if the user clicks on any part of a point, we assume he meant to click on
+     * the center of the point.
+     */
+    QGraphicsItem* item = itemAt(event->scenePos(), views().at(0)->transform());
+    if ( item->type() == POINT_W )
+    {
+        scenePos = item->scenePos();
+        //qDebug() << "adjustClick2Point " << scenePos;
+    }
+
+    emit newMouseClickPreSelect(scenePos);
 
     /*
      * By default clicking on scene select the item below cursor. But in
@@ -108,7 +123,7 @@ void GribouillotScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
          */
         QGraphicsScene::mousePressEvent(event);
 
-    emit newMouseClickPostSelect(event->scenePos());
+    emit newMouseClickPostSelect(scenePos);
 
 }
 

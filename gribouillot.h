@@ -137,24 +137,29 @@ private slots:
 
 
 /*************** In gribouillot_toolbar.cpp **************/
+private:
+    bool moreCoordsNeeded(QPointF position);
+    bool moreDrawingTips();
+
+    QLineF58 getSelectedLineF();
+
+    void visualHelp_arcFromCircle();
+    void visualHelp_pointOnRail();
+    void visualHelp_lineFromAngle(Item_pointOnRail* pOR);
+
+    void userCanNotDo(QString operation);
+
+private slots:
     //React to scene events
     void newMoveOnScene(QPointF position);
     void newSceneClickPreSelect(QPointF position);
     void newSceneClickPostSelect(QPointF position);
-    bool moreCoordsNeeded(QPointF position);
-    bool moreDrawingTips();
-    QPointF adjustClickToPoint(QPointF pos);
-    QLineF58 getSelectedLineF();
 
     void keyDeleteFromScene();
     void keySpaceFromScene();
     void keyTFromScene();
 
     void sceneSelectionChanged() const;
-
-    void visualHelp_arcFromCircle();
-    void visualHelp_pointOnRail();
-    void visualHelp_lineFromAngle(Item_pointOnRail* pOR);
 
     //Toolbars actions (linked to scene events)
     void on_actionCursorDrag_triggered();

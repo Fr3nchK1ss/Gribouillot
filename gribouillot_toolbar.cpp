@@ -117,7 +117,7 @@ void Gribouillot::newSceneClickPreSelect(QPointF position)
                     helper->grabMouse();//Grab mouse in order to self-draw (respond to MousePressEvent)
                 }
                 else
-                    ui->statusBar->showMessage("Angle center and start points can not be the same!");
+                    statusBar()->showMessage("Angle center and start points can not be the same!");
             }
             break;
 
@@ -176,7 +176,7 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
     switch (currentDrawing)
     {
         case SEGMENT:
-            if ( !moreCoordsNeeded(adjustClickToPoint(position)) )
+            if ( !moreCoordsNeeded(position) )
             {
                 currentLayer->drawSegment(drawingColor, drawingWidth, drawingCoords);
                 on_actionSegment_triggered();//reset drawing tool
@@ -184,7 +184,7 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
             break;
 
         case LINE:
-            if ( !moreCoordsNeeded(adjustClickToPoint(position)) )
+            if ( !moreCoordsNeeded(position) )
             {
                 currentLayer->drawLineFromSegment(drawingColor, drawingWidth, drawingCoords);
                 on_actionLine_triggered();//reset drawing tool
@@ -192,11 +192,11 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
             break;
 
         case HORIZONTAL:
-            currentLayer->drawHorizontal(drawingColor, drawingWidth, adjustClickToPoint(position));
+            currentLayer->drawHorizontal(drawingColor, drawingWidth, position);
             break;
 
         case VERTICAL:
-            currentLayer->drawVertical(drawingColor, drawingWidth, adjustClickToPoint(position));
+            currentLayer->drawVertical(drawingColor, drawingWidth, position);
             break;
 
         case LINE_FROMANGLE:
@@ -260,7 +260,7 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
 
 
         case CIRCLE_FROMCENTERPOINT:
-            if( !moreCoordsNeeded (adjustClickToPoint(position) ) )
+            if( !moreCoordsNeeded (position ) )
             {
                 center =
                 currentLayer->drawCircleFromRadius(drawingColor, drawingWidth,
@@ -281,12 +281,12 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
 
             center =
             currentLayer->drawCircleFromRadius(drawingColor, drawingWidth,
-                                                adjustClickToPoint(position),//center coordinates
+                                                position,//center coordinates
                                                 scale, scaleUnit);
             break;
 
         case CIRCLE_FROMDIAMETER:
-            if (!moreCoordsNeeded(adjustClickToPoint(position)))
+            if (!moreCoordsNeeded(position))
             {
                 center =
                 currentLayer->drawCircleFromDiameter(drawingColor, drawingWidth,
@@ -309,7 +309,7 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
             break;
 
         case CIRCLE_FROMTRIANGLE:
-            if (!moreCoordsNeeded(adjustClickToPoint(position)))
+            if (!moreCoordsNeeded(position))
             {
                 center =
                 currentLayer->drawCircleFromTriangle(drawingColor, drawingWidth,
@@ -407,32 +407,6 @@ bool Gribouillot::moreDrawingTips()
 }
 
 
-
-
-
-
-/**
- * @brief   Correct the position of the click to closest item_point.
- * @details Check if the user's click selected a point. If this is true, use
- *          the coordinates of the point as position instead of the exact
- *          scene position of the click.
- * TODO TODO: would work only if POINT_W are enabled!!
- */
-QPointF Gribouillot::adjustClickToPoint(QPointF pos)
-{
-    //check if this click has selected a point
-    if (scene->isOnlySelected({POINT_W}, 1))
-    {
-        //replace 'position' by the coordinate of the selected point
-        pos = currentLayer->selectedItems().at(0)->scenePos();
-        //qDebug() << "adjusted";
-    }
-
-    return pos;
-
-}
-
-
 /**
  * @brief   Extract the lineF from selected item_segment or item_line
  * @details Only called after an if(inOnlySelected({SEGMENT, LINE})) to ensure
@@ -460,6 +434,9 @@ void Gribouillot::keyDeleteFromScene()
     if (count > 0)
         statusBar()->showMessage(QString::number(count) +
                                  tr(" item(s) deleted."));
+    else if (count == 0)
+        userCanNotDo("delete");
+
 }
 
 
@@ -515,6 +492,8 @@ void Gribouillot::keyTFromScene()
             }
         }
     }
+    else
+        userCanNotDo("thickness change");
 }
 
 
@@ -758,6 +737,20 @@ void Gribouillot::visualHelp_lineFromAngle(Item_pointOnRail* pOR)
 }
 
 
+/**
+ * @brief   Send message to user when 'operation' can not be done.
+ */
+void Gribouillot::userCanNotDo(QString operation)
+{
+    if (scene->selectedItems().count() > 0)
+        statusBar()->showMessage(tr("The selected items belong to a different layer! Can not perform ")
+                                    +operation+".");
+    else
+        statusBar()->showMessage(tr("No item to ")+operation+".");
+
+}
+
+
 
 /*********************** private slots ** toolbar actions ******************************/
 /**
@@ -930,7 +923,6 @@ void Gribouillot::on_actionSegment_triggered()
 {
     setDrawingView();
     scene->clearSelection();
-    scene->enableOnlyItems({POINT_W});
     currentDrawing = SEGMENT;
     drawingTips = {tr("Segment: pick up a first end."),
                    tr("Segment: pick up the other end.")};
@@ -948,7 +940,7 @@ void Gribouillot::on_actionLine_triggered()
     setDrawingView();
     scene->clearSelection();
     currentDrawing = LINE;
-    scene->enableOnlyItems({POINT_W});
+    //scene->enableOnlyItems({POINT_W});//for adjust click to point
     drawingTips = {tr("Line: pick up a first point."),
                    tr("Line: pick up a second point.")};
 
@@ -964,7 +956,6 @@ void Gribouillot::on_actionHorizontalLine_triggered()
 {
     setDrawingView();
     scene->clearSelection();
-    scene->enableOnlyItems({POINT_W});
     currentDrawing = HORIZONTAL;
 
     statusBar()->showMessage(tr("Horizontal line: pick up a waypoint."));
@@ -978,7 +969,6 @@ void Gribouillot::on_actionVerticalLine_triggered()
 {
     setDrawingView();
     scene->clearSelection();
-    scene->enableOnlyItems({POINT_W});
     currentDrawing = VERTICAL;
 
     statusBar()->showMessage(tr("Vertical line: pick up a waypoint."));
@@ -1059,7 +1049,6 @@ void Gribouillot::on_actionCircleCenterPoint_triggered()
     setDrawingView();
     scene->clearSelection();
     currentDrawing = CIRCLE_FROMCENTERPOINT;
-    scene->enableOnlyItems({POINT_W});
     drawingTips = {tr("Circle: define a center."),
                    tr("Circle: pick up a point of the circumference.")};
 
@@ -1093,7 +1082,6 @@ void Gribouillot::on_actionCircleRadiusValue_triggered()
     setDrawingView();
     scene->clearSelection();
     currentDrawing = CIRCLE_FROMRADIUSVALUE;
-    scene->enableOnlyItems({POINT_W});
 
     statusBar()->showMessage(tr("Circle: define a center."));
 }
@@ -1108,7 +1096,6 @@ void Gribouillot::on_actionCircleDiameter_triggered()
     setDrawingView();
     scene->clearSelection();
     currentDrawing = CIRCLE_FROMDIAMETER;
-    scene->enableOnlyItems({POINT_W});
     drawingTips = {tr("Circle: define the first end of the diameter."),
                    tr("Circle: define the other end of the diameter.")};
 
@@ -1138,7 +1125,6 @@ void Gribouillot::on_actionCircleTriangle_triggered()
 {
     setDrawingView();
     currentDrawing = CIRCLE_FROMTRIANGLE;
-    scene->enableOnlyItems({POINT_W});
     drawingTips = {tr("Circle: Pick up a first point of the circumference."),
                    tr("Circle: Pick up a second point of the circumference."),
                    tr("Circle: Pick up a third point of the circumference.")};
