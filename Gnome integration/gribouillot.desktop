@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=2.0
+Type=Application
+Name=Gribouillot
+Comment=Geometric drawing on maps
+Exec=/usr/bin/Gribouillot
+Icon=gribouillot.png
+MimeType=grib;
+Categories=Utility;Graphics
