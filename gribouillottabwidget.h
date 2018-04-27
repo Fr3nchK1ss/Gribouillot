@@ -14,6 +14,8 @@ class GribouillotTabWidget : public SmartInsertTabWidget
 public:
     explicit GribouillotTabWidget(QWidget* parent = nullptr);
 
+    void reset();
+    void setMapTab(QString mapPath, QString mapName);
     int insertAndDisplayTab(int index, GribouillotLayer *layer, const QString &label);
 
 };

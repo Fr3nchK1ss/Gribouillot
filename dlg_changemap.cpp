@@ -16,13 +16,13 @@
 QString getSupportedImageFormats();
 QString getDefaultImageFilter(QString);
 
-dlg_changeMap::dlg_changeMap(QString mapName, QWidget *parent) :
+dlg_changeMap::dlg_changeMap(QString oldMapName, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::dlg_changeMap)
 {
     ui->setupUi(this);
     setWindowTitle(tr("Select the background map"));
-    ui->mapFileLbl->setText(mapName+tr(" not found. Select a new file: "));
+    ui->mapFileLbl->setText(oldMapName+tr(" not found. Select a new file: "));
 }
 
 dlg_changeMap::~dlg_changeMap()

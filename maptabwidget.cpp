@@ -39,7 +39,7 @@ MapTabWidget::~MapTabWidget()
 /**
  * @brief   reset the User Interface of the map Tab
  */
-void MapTabWidget::resetUI()
+void MapTabWidget::resetUi()
 {
     ui->blackWhiteTlBtt->setChecked(false);
     ui->gpsTlBtt->setChecked(false);

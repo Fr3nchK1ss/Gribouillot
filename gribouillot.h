@@ -52,16 +52,17 @@ protected:
 private:
     //GUI pointers
     Ui::Gribouillot *ui;
+    int restrictedActions;
     GribouillotScene* scene;
     Minimap *minimap;
 
     //Project variables
     QString currentProjectName;
-    QString mapTabName;
+    QString mapName;
     QString mapPath;
     QGraphicsPixmapItem *backgroundMap;
 
-    //Tabpage variables
+    //Layers variables
     GribouillotLayer *currentLayer;
     int currentTabIndex;
 
@@ -87,23 +88,24 @@ private:
 
     /**private functions */
     //UI functions
-    void createPlusTab();
     void restrictToolbar();
     void fullToolbar();
+    void readSettings();
+    void writeSettings();
+    void addNewLayer(QString path = "");
     void setWorkingLayer(GribouillotLayer* layer);
-    void setColorIcon(QColor color);
     void clearView();
     void setDrawingView();
     void setSelectionView();
     void uncheckDrawingGroup();
-    void resetUI();
+    void resetUi();
     void initGpsDialog();
+    void setColorIcon(QColor color);
 
     //Project functions
-    void maybeSave();
     void initProject();
     void loadBackgroundMap(QString path);
-    void addNewLayer(QString path = "");
+    void maybeSave();
     void saveLayersOrder();
 
 private slots:
@@ -121,7 +123,7 @@ private slots:
     void on_actionAbout_Grib_triggered();
 
     //MapTabWidget actions
-    void mapTabNameTlBttClicked();
+    void mapNameTlBttClicked();
     void blackWhiteTlBttClicked(bool isChecked);
 
     void gpsTlBttClicked();
@@ -136,7 +138,7 @@ private slots:
     void switchToTabIndex(int newTabIndex);
 
 
-/*************** In gribouillot_toolbar.cpp **************/
+/*************** In module gribouillot_toolbar.cpp **************/
 private:
     bool moreCoordsNeeded(QPointF position);
     bool moreDrawingTips();

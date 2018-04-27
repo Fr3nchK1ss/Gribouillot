@@ -51,7 +51,7 @@ private:
     Ui::MapTabWidget *ui;
     qreal kmPxScale;
 
-    void resetUI();
+    void resetUi();
     void computeKmPxScale(double km, double px);
 
 private slots:

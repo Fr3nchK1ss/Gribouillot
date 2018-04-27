@@ -14,10 +14,14 @@
 Minimap::Minimap(QGraphicsScene *scene, ZoomableGraphicsView *mainView) :
     QGraphicsView(mainView)
 {
-    setGeometry(0, 0, 150, 150);
+    setScene(scene);
+
+    setMinimumSize(150, 150);
+    setMaximumSize(250, 250);
+
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    setScene(scene);
+
     setCursor(Qt::CrossCursor);
     setToolTip(tr("Double-click to jump to a new position."));
     show();

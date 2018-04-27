@@ -35,7 +35,7 @@ Gribouillot::Gribouillot(QWidget *parent) :
     scene(new GribouillotScene),
     minimap(nullptr),
     currentProjectName(""),
-    mapTabName(""),
+    mapName(""),
     backgroundMap(new QGraphicsPixmapItem),
 
     currentTabIndex(0),
@@ -46,21 +46,20 @@ Gribouillot::Gribouillot(QWidget *parent) :
 
 {
     ui->setupUi(this);
+    //The spiral dialog is an extension of the interface which is shown/hidden if necessary
+    spiralDialog = new Dlg_spiral(this);
 
     //Menu connections
-    connect (ui->actionAbout_Qt, &QAction::triggered, qApp, &QApplication::aboutQt);
+    //connect (ui->actionAbout_Qt, &QAction::triggered, qApp, &QApplication::aboutQt);
 
     //TabWidget
     connect (ui->gribTabWidget, &SmartInsertTabWidget::currentChanged, this, &Gribouillot::switchToTabIndex);
 
     //mapTabWidget is an extension of the mainWindow and even a "friendly" Class.
-    connect (ui->mapTabWidget->ui->mapTabNameTlBtt, &QToolButton::clicked, this, &Gribouillot::mapTabNameTlBttClicked);
+    connect (ui->mapTabWidget->ui->mapTabNameTlBtt, &QToolButton::clicked, this, &Gribouillot::mapNameTlBttClicked);
     connect (ui->mapTabWidget->ui->blackWhiteTlBtt, &QToolButton::toggled, this, &Gribouillot::blackWhiteTlBttClicked);
     connect (ui->mapTabWidget->ui->scaleRulerTlBtt, &QToolButton::clicked, this, &Gribouillot::scaleRulerTlBttTriggered);
     connect (ui->mapTabWidget->ui->gpsTlBtt, &QToolButton::clicked, this, &Gribouillot::gpsTlBttClicked);
-
-    //The spiral dialog is an extension of the interface which is shown/hidden if necessary
-    spiralDialog = new Dlg_spiral(this);
 
     //graphicsView and its drawing cursor
     ui->zGraphicsView->setScene(scene);
@@ -79,13 +78,17 @@ Gribouillot::Gribouillot(QWidget *parent) :
     //Connect mapTabWidget to zGraphicsView in order to update the black & white scale bar
     connect(ui->mapTabWidget, &MapTabWidget::newSystemScale, ui->zGraphicsView, &ZoomableGraphicsView::systemScaleChanged);
 
-    //Toolbar
     drawingGroup = new QActionGroup(this);
+
+    //Toolbar actions which are not affected by restrictToolbar()
     drawingGroup->addAction(ui->actionCursorDrag);
     drawingGroup->addAction(ui->actionCursorSelect);
     drawingGroup->addAction(ui->actionMeasureDistance);
     drawingGroup->addAction(ui->actionMeasureAngle);
 
+    restrictedActions = drawingGroup->actions().count();//Do not move this line!
+
+    //Toolbar actions affected by restrictToolbar()
     drawingGroup->addAction(ui->actionPoint);
 
     drawingGroup->addAction(ui->actionSegment);
@@ -118,10 +121,14 @@ Gribouillot::Gribouillot(QWidget *parent) :
     ui->toolBar->setEnabled(false);
     ui->centralwidget->setEnabled(false);
 
+
+    //TODO: implement GPS
+    ui->mapTabWidget->ui->gpsTlBtt->setVisible(false);
+
     show();
 
-    openProject("/home/tyler/Grib/The Big Project/The Big Project.grib");//DEV
-
+    //load global settings
+    readSettings();
 }
 
 Gribouillot::~Gribouillot()
@@ -138,9 +145,18 @@ Gribouillot::~Gribouillot()
  */
 void Gribouillot::closeEvent(QCloseEvent *event)
 {
-    //if(!currentProjectName.isEmpty())//DEV
-      //  maybeSave();//DEV
+    /*
+     * Saving project must be done first, because of the 'recentProject'
+     * key used in writeSettings.
+     */
+    if(!currentProjectName.isEmpty())
+        maybeSave();//maybe save current project
+
+    //Automatically save general settings (window position, etc)
+    writeSettings();
+
     event->accept();
+
 }
 
 
@@ -152,9 +168,11 @@ void Gribouillot::closeEvent(QCloseEvent *event)
  */
 void Gribouillot::restrictToolbar()
 {
-    QList<QAction *> actionsList = ui->toolBar->actions();
-    for (int i=4; i < actionsList.size(); ++i)//4 is hardcoded
-        (actionsList.at(i))->setEnabled(false);
+    QList<QAction*> actionsList = ui->toolBar->actions();
+    for (int i=restrictedActions; i < actionsList.size(); ++i)
+    {
+        actionsList.at(i)->setEnabled(false);
+    }
 
     //currentLayer has no sense since no layer is selected
     currentLayer = nullptr;
@@ -173,6 +191,110 @@ void Gribouillot::fullToolbar()
         action->setEnabled(true);
         //qDebug() << action;
     }
+}
+
+
+/**
+ * @brief Typical readSettings function for global parameters
+ */
+void Gribouillot::readSettings()
+{
+    QSettings settings("GAT", "Gribouillot");
+
+    settings.beginGroup("MainWindow");
+        resize(settings.value("size", QSize(970, 600)).toSize());
+        move(settings.value("pos", QPoint(100, 100)).toPoint());
+    settings.endGroup();
+
+
+    //Restore spiral dialog settings
+    settings.beginGroup("spiral");
+    spiralDialog->loadData( settings.value("constructAsOneItem", true).toBool(),
+                            settings.value("baseDisplay", false).toBool(),
+                            settings.value("showBaseCentersOnly", true).toBool());
+    settings.endGroup();
+
+    settings.beginGroup("preferences");
+        ui->actionCopy_pixmaps->setChecked( settings.value("copyPixmaps", true).toBool() );
+        autosaveTime = settings.value("autosave", 0).toInt();
+    settings.endGroup();
+
+    if (settings.contains("recentProject"))
+        openProject(settings.value("recentProject").toString());
+
+    //Restore minimap after openProject(), when the background map is loaded.
+    ui->actionMinimap->setChecked(settings.value("preferences/minimap").toBool());
+
+}
+
+
+/**
+ * @brief Typical writeSettings function
+ */
+void Gribouillot::writeSettings()
+{
+    QSettings settings("GAT", "Gribouillot");
+
+    settings.beginGroup("MainWindow");
+        settings.setValue("size", size());
+        settings.setValue("pos", pos());
+    settings.endGroup();
+
+    settings.beginGroup("spiral");
+        settings.setValue("constructAsOneItem", spiralDialog->isOneItem());
+        settings.setValue("baseDisplay", spiralDialog->isBaseDisplayed());
+        settings.setValue("showBaseCentersOnly", spiralDialog->showBaseCentersOnly());
+    settings.endGroup();
+
+    settings.beginGroup("preferences");
+        settings.setValue("minimap", ui->actionMinimap->isChecked());
+        settings.setValue("copyPixmaps", ui->actionCopy_pixmaps->isChecked());
+        settings.setValue("autosave", autosaveTime);
+    settings.endGroup();
+
+
+    QString projectFile = QDir::currentPath()+"/"+currentProjectName+".grib";
+    /*
+     * The current project will be the 'recent project' of the next session,
+     * except if the User didn't want to save it for some reason. So we verify
+     * if the current project was actually written on disk during maybeSave().
+     */
+    if ( QFileInfo(projectFile).exists() )
+        settings.setValue("recentProject", projectFile);
+    //else
+        //settings.value() remains the last project saved on disk, or an empty string.
+
+}
+
+
+/**
+ * @brief   Create or load a layer (load if a path is given).
+ * @details Ideally, addNewLayer should only call the GribouillotLayer constructor. However
+ *          the new layer interface needs to be integrated in the mainWindow interface when
+ *          it comes to tab insertion, deletion or labelling.
+ */
+void Gribouillot::addNewLayer(QString path)
+{
+    GribouillotLayer *newLayer;
+
+    if (path.isEmpty())
+    {
+        //A new layer is created with the +tab.
+        newLayer = new GribouillotLayer(this);
+    }
+    else
+    {
+        //A new layer is loaded from an external file.
+        newLayer = new GribouillotLayer(path, this);
+    }
+
+    //Insert the new layer after 'currentLayer' and make it the visible layer
+    currentTabIndex = ui->gribTabWidget->insertAndDisplayTab(currentTabIndex+1,
+                                                            newLayer,
+                                                            newLayer->getLabel());
+    currentLayer = newLayer;
+    setWorkingLayer(currentLayer);
+
 }
 
 
@@ -206,17 +328,6 @@ void Gribouillot::setWorkingLayer(GribouillotLayer* layer)
         fullToolbar();
     }
 
-}
-
-
-/**
- * @brief Set the icon showing the drawing color
- */
-void Gribouillot::setColorIcon(QColor color)
-{
-    QPixmap pixmap(18, 18);
-    pixmap.fill(color);
-    ui->actionChooseColor->setIcon(QIcon(pixmap));
 }
 
 
@@ -309,39 +420,21 @@ void Gribouillot::uncheckDrawingGroup()
  * @brief   Reset the user interface when changing project
  * @details Does not reset color wheel
  */
-void Gribouillot::resetUI()
+void Gribouillot::resetUi()
 {
-    //reset Menus
-    ui->actionCopy_pixmaps->setChecked(true);
-    ui->actionMinimap->setChecked(false);
-
     //reset MapTabWidget
-    ui->mapTabWidget->resetUI();
+    ui->mapTabWidget->resetUi();
+    ui->gribTabWidget->reset();
 
-    /*
-     * Reset TabWidget (delete all layers).
-     * NB: This will call restrictToolbar() and select default cursor.
-     * count()-2 and not just count() becoz mapTab and plusTab are no layers!
-     */
-    int layersCount = ui->gribTabWidget->count()-2;//necessary, count() is modified in the for loop
-    for (int i = 0; i < layersCount; ++i)
-    {
-        //widget(1) is different each time!
-        GribouillotLayer *layer = dynamic_cast<GribouillotLayer *>(ui->gribTabWidget->widget(1));
-        ui->gribTabWidget->removeTab(1);//modify ui->gribTabWidget->count()!
-        delete layer;
-    }
     GribouillotLayer::resetLayerIndex();
 
-    //reset scene and delete all items including backgroundMap & beacons
+    //reset scene and delete all items including backgroundMap
     scene->clear();
     scene->setSceneRect(0, 0, 0, 0);
 
     //new empty background map
     backgroundMap = new QGraphicsPixmapItem();
-    mapTabName = "";
-    ui->gribTabWidget->setTabText(0, "Map");
-    ui->gribTabWidget->setTabToolTip(0, "");
+    mapName = "";
 
     //reset GPS dialog
     delete gpsDialog; gpsDialog = nullptr;
@@ -364,25 +457,19 @@ void Gribouillot::initGpsDialog()
 }
 
 
-
-/********************* Private functions - Project management **********************/
 /**
- * @brief   typical maybeSave() implementation asking the user to confirm a save
+ * @brief Set the icon showing the drawing color
  */
-void Gribouillot::maybeSave()
+void Gribouillot::setColorIcon(QColor color)
 {
-    QMessageBox::StandardButton ret;
-    ret = QMessageBox::warning(this,
-                               tr("Confirm action"),
-                               tr("Do you want to save changes to project \"")+currentProjectName+"\" ?",
-                               QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
-
-    if (ret == QMessageBox::Save)
-        saveProject();
-
+    QPixmap pixmap(18, 18);
+    pixmap.fill(color);
+    ui->actionChooseColor->setIcon(QIcon(pixmap));
 }
 
 
+
+/********************* Private functions - Project management **********************/
 /**
  * @brief   Factorize code for creating or opening a project.
  */
@@ -392,8 +479,10 @@ void Gribouillot::initProject()
     {
         maybeSave();
         //Reset interface to default settings
-        resetUI();
-    } else {
+        resetUi();
+    }
+    else
+    {
         //Enable interface which is disabled on start
         ui->centralwidget->setEnabled(true);
         ui->toolBar->setEnabled(true);
@@ -422,10 +511,12 @@ void Gribouillot::openProject(QString gribFile)
         QSettings settings(gribFile, QSettings::IniFormat);
 
         //Restore background map
+        mapName = settings.value("map/mapName", "").toString();
         mapPath = settings.value("map/mapPath", "").toString();
         QFileInfo mapFileInfo = QFileInfo(mapPath);
 
-        /* verify that mapPath is valid, the project folder may have
+        /*
+         * Verify that mapPath is valid, the project folder may have
          * been moved around the file system!
          */
         if ( !mapFileInfo.exists() )
@@ -447,23 +538,13 @@ void Gribouillot::openProject(QString gribFile)
         }
 
         if ( !mapPath.isEmpty() )
-        {
             loadBackgroundMap(mapPath);
-
-            mapTabName = settings.value("map/mapTabName", "").toString();
-            if (mapTabName.isEmpty())
-                mapTabName = QFileInfo(mapPath).baseName();
-
-            ui->gribTabWidget->setTabText(0, mapTabName);
-            ui->gribTabWidget->setTabToolTip(0, mapPath);
-        }
         else
             //Load project without a background map
             QMessageBox::information(this,
                                     currentProjectName,
                                     tr("Starting without background map."),
                                     QMessageBox::Ok);
-
 
         //Restore drawing color and drawing width
         drawingColor = settings.value("drawing/color", QColor(Qt::black)).value<QColor>();
@@ -485,14 +566,14 @@ void Gribouillot::openProject(QString gribFile)
 
 
         //Restore scale spinBoxes.
-        //NOTE: setting new SpinBox values automatically triggers a new scale computation.
+        //NOTE: setting new SpinBoxes values automatically triggers a new scale computation.
         ui->mapTabWidget->ui->pxSpinBox->setValue(settings.value("scale/pxSpinBx", 0).toDouble());
         ui->mapTabWidget->ui->kmSpinBox->setValue(settings.value("scale/kmSpinBx", 0).toDouble());
         ui->mapTabWidget->ui->mKmComboBox->setCurrentIndex(settings.value("scale/mkmUnit", 0).toInt());
 
 
         /*
-         * Restore GPS settings. Since initProject() was called, resetUI() was also
+         * Restore GPS settings. Since initProject() was called, resetUi() was also
          * called and the gpsDialog is currently a null pointer.
          */
         initGpsDialog();
@@ -506,30 +587,6 @@ void Gribouillot::openProject(QString gribFile)
                 ui->mapTabWidget->ui->gpsTlBtt->setIcon(QIcon(QPixmap(":/Resources/Icons/gps-on.png")));
             }
         }
-
-
-        //Display minimap if necessary TODO: project independent setting
-        if(settings.value("minimap").toBool())
-        {
-            ui->actionMinimap->setChecked(true);
-            //minimap->setGeometry(QRect(0,0,250,150));
-        }
-
-
-        //Restore spiral dialog settings
-        settings.beginGroup("spiral");
-        spiralDialog->loadData( settings.value("constructAsOneItem", true).toBool(),
-                                settings.value("baseDisplay", false).toBool(),
-                                settings.value("showBaseCentersOnly", true).toBool());
-        settings.endGroup();
-
-
-        //Restore Autosave settings TODO: project independent setting
-        settings.beginGroup("preferences");
-        ui->actionCopy_pixmaps->setChecked( settings.value("copyPixmaps", true).toBool() );
-        autosaveTime = settings.value("autosave", 0).toInt();
-        settings.endGroup();
-
 
         //Restore layers from XML files located in current project folder
         settings.beginGroup("layersOrder");
@@ -575,63 +632,43 @@ void Gribouillot::openProject(QString gribFile)
  */
 void Gribouillot::loadBackgroundMap(QString path)
 {
-    ui->gribTabWidget->setTabText(0, QDir(path).dirName());
-    backgroundMap->setPixmap(QPixmap(path));
-
-    /** Limit the scrollable view to the background map*/
-    QRectF viewBoundingRect = backgroundMap->boundingRect();
-    ui->zGraphicsView->setSceneRect(viewBoundingRect);
-
-    /**
-     * Being the first item added to the scene, backgroundMap has the lowest
-     * Z value and is always in the background.
-     */
-    scene->addItem(backgroundMap);
-}
-
-
-/**
- * @brief   Create or load a layer (load if a path is given).
- * @details Ideally, addNewLayer should only call the GribouillotLayer constructor. However
- *          the new layer interface needs to be integrated in the mainWindow interface when
- *          it comes to tab insertion, deletion or labelling.
- */
-void Gribouillot::addNewLayer(QString path)
-{
-    GribouillotLayer *newLayer;
-
-    if (path.isEmpty())
+    if(!path.isEmpty())
     {
-        //A new layer is created with the +tab.
-        newLayer = new GribouillotLayer(this);
-    }
-    else
-    {
-        //A new layer is loaded from an external file.
-        newLayer = new GribouillotLayer(path, this);
-    }
+        if (mapName.isEmpty())
+            mapName = QFileInfo(path).baseName();
 
-    //Insert the new layer after 'currentLayer' and make it the visible layer
-    currentTabIndex =   ui->gribTabWidget->insertAndDisplayTab(currentTabIndex+1,
-                                                           newLayer,
-                                                           newLayer->getLabel());
-    currentLayer = newLayer;
-    setWorkingLayer(currentLayer);
+        backgroundMap->setPixmap(QPixmap(path));
+        ui->gribTabWidget->setMapTab(path, mapName);
+
+        /* Limit the scrollable view to the background map*/
+        QRectF viewBoundingRect = backgroundMap->boundingRect();
+        ui->zGraphicsView->setSceneRect(viewBoundingRect);
+
+        /*
+         * Being the first item added to the scene, backgroundMap has the lowest
+         * Z value and is always in the background.
+         */
+        scene->addItem(backgroundMap);
+
+        //Refresh minimap view
+        if (minimap != nullptr)
+            minimap->fitInView(backgroundMap, Qt::KeepAspectRatio);
+    }
 
 }
 
 
 /**
- * @brief   Save the order of the layers after a layer deletion. Order only!
- * @detail  A deleted layer has its corresponding file definitively removed from disk.
+ * @brief   Save (only) the order of the layers after a layer deletion. Layers are not written on disk!!
+ * @details A deleted layer has its corresponding file definitively removed from disk.
  */
 void Gribouillot::saveLayersOrder()
 {
-
     QSettings settings(currentProjectName+".grib",
                        QSettings::IniFormat);
 
     settings.beginGroup("layersOrder");
+
         settings.remove("");
 
         for (int i = 1; i < (ui->gribTabWidget->count() -1); ++i)
@@ -639,9 +676,29 @@ void Gribouillot::saveLayersOrder()
             GribouillotLayer *layer = dynamic_cast<GribouillotLayer *>(ui->gribTabWidget->widget(i));
             settings.setValue(QString::number(i), layer->getLabel());
         }
+
     settings.endGroup();
 
 }
+
+
+/**
+ * @brief   typical maybeSave() implementation asking the user to confirm the changes
+ *          to the current project. Ui changes are saved separately.
+ */
+void Gribouillot::maybeSave()
+{
+    QMessageBox::StandardButton ret;
+    ret = QMessageBox::warning(this,
+                               tr("Confirm action"),
+                               tr("Do you want to save your changes to project \"")+currentProjectName+"\"?",
+                               QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+
+    if (ret == QMessageBox::Save)
+        saveProject();
+
+}
+
 
 
 /*********************** private slots ** MainWindow Menu ****************************/
@@ -745,7 +802,7 @@ void Gribouillot::saveProject()
         //Save background map path & name if any
         settings.beginGroup("map");
             settings.setValue("mapPath", mapPath);
-            settings.setValue("mapTabName", mapTabName);
+            settings.setValue("mapName", mapName);
         settings.endGroup();
 
         //Save current drawing color and width
@@ -775,24 +832,6 @@ void Gribouillot::saveProject()
             settings.setValue("gpsEnabled", gpsEnabled);
         settings.endGroup();
 
-
-        //save Minimap mode
-        settings.setValue("minimap", ui->actionMinimap->isChecked());
-
-        //save drawing options for 4C spiral
-        settings.beginGroup("spiral");
-            settings.setValue("constructAsOneItem", spiralDialog->isOneItem());
-            settings.setValue("baseDisplay", spiralDialog->isBaseDisplayed());
-            settings.setValue("showBaseCentersOnly", spiralDialog->showBaseCentersOnly());
-        settings.endGroup();
-
-
-        settings.beginGroup("preferences");
-            settings.setValue("copyPixmaps", ui->actionCopy_pixmaps->isChecked());
-            settings.setValue("autosave", autosaveTime);
-        settings.endGroup();
-
-
         //Save layers
         settings.beginGroup("layersOrder");
         settings.remove("");
@@ -818,10 +857,10 @@ void Gribouillot::saveProject()
                              label+tr(": another layer was already saved under "
                              "this name, please change the name of the layer."),
                              QMessageBox::Ok);
-                    label = layer->newLabel(true);//a dialog asks for new label
+                    label = layer->newLabel(true);//a modal dialog asks for new label
                     ui->gribTabWidget->setTabIcon(i, QIcon());
                     ui->gribTabWidget->setTabText(i, label);
-                    //At this point the layer has a new label, we can continue normally
+                    //At this point the layer has a new label, we can move on
                 }
 
                 if(layer->writeXML())
@@ -833,11 +872,16 @@ void Gribouillot::saveProject()
 
         settings.endGroup();
 
+        QSettings appSettings("GAT", "Gribouillot");
+        QString projectFile = QDir::currentPath()+"/"+currentProjectName+".grib";
+        appSettings.setValue("recentProject", projectFile);
+
 
         //User feedback
         statusBar()->showMessage(tr("Project saved (")+
                                  QString::number(savedLabels.size())+
                                  tr(" layers saved)."));
+
     }
 }
 
@@ -882,7 +926,6 @@ void Gribouillot::on_actionMinimap_toggled(bool isChecked)
     if (isChecked && minimap == nullptr)
     {
         minimap = new Minimap(scene, ui->zGraphicsView);
-        minimap->fitInView(backgroundMap);
         minimap->fitInView(backgroundMap, Qt::KeepAspectRatio);
     }
     else
@@ -954,7 +997,7 @@ void Gribouillot::on_actionAbout_Grib_triggered()
 /**
  * @brief   Change the name of the map visible in the tabWidget
  */
-void Gribouillot::mapTabNameTlBttClicked()
+void Gribouillot::mapNameTlBttClicked()
 {
     QString newName = QInputDialog::getText(this,
                                          tr("Rename the map Tab"),
@@ -962,9 +1005,8 @@ void Gribouillot::mapTabNameTlBttClicked()
                                             "Also the file name will still appear as a tooltip on mouseover."));
     if (!newName.isNull())
     {
-        mapTabName = newName;
-        ui->gribTabWidget->setTabText(0, mapTabName);
-        ui->gribTabWidget->setTabToolTip(0, mapPath);
+        mapName = newName;
+        ui->gribTabWidget->setMapTab(mapPath, mapName);
     }
 }
 

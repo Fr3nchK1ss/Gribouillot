@@ -64,10 +64,13 @@ bool Dlg_newGribproject::copyExternalPictures()
  */
 void Dlg_newGribproject::projectDirPath()
 {
+    QDir browseFrom = QDir::current();
+    browseFrom.cdUp();
+
     QString projectDir = QFileDialog::getExistingDirectory(
                             this,
                             tr("Select or create a project directory"),
-                            QDir::currentPath());
+                            browseFrom.path());
     if (projectDir.isEmpty())
         projectDir = QDir::currentPath();
 
@@ -80,13 +83,16 @@ void Dlg_newGribproject::projectDirPath()
  */
 void Dlg_newGribproject::mapImagePath()
 {
+    QDir browseFrom = QDir::current();
+    browseFrom.cdUp();
+
     QString supportedFormats = getSupportedImageFormats();
     QString defaultFilter = getDefaultImageFilter(supportedFormats);
 
     ui->mapImageEdit->setText(QFileDialog::getOpenFileName(
                     this,
                     tr("Select an image file"),
-                    QDir::currentPath(),
+                    browseFrom.path(),
                     supportedFormats,
                     &defaultFilter));
 }

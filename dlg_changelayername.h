@@ -24,7 +24,7 @@ public:
     explicit Dlg_changeLayerName(QString currentLayerName, QWidget *parent = nullptr);
     ~Dlg_changeLayerName();
 
-        QString getLayerName();
+    QString getLayerName();
 
 private:
     Ui::Dlg_changeLayerName *ui;

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>999</width>
+    <width>970</width>
     <height>600</height>
    </rect>
   </property>
@@ -34,7 +34,7 @@
         <string notr="true"/>
        </property>
        <attribute name="title">
-        <string>Tab 1</string>
+        <string>Background Map</string>
        </attribute>
       </widget>
      </widget>
@@ -63,7 +63,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>999</width>
+     <width>970</width>
      <height>22</height>
     </rect>
    </property>
@@ -84,7 +84,6 @@
     <property name="title">
      <string>Tools</string>
     </property>
-    <addaction name="actionMinimap"/>
     <addaction name="actionCenterOfMass"/>
     <addaction name="actionSpiralOptions"/>
    </widget>
@@ -99,6 +98,7 @@
     <property name="title">
      <string>Preferences</string>
     </property>
+    <addaction name="actionMinimap"/>
     <addaction name="actionCopy_pixmaps"/>
     <addaction name="actionAutosave"/>
    </widget>
@@ -482,6 +482,9 @@
    <property name="text">
     <string>About Qt</string>
    </property>
+   <property name="menuRole">
+    <enum>QAction::AboutQtRole</enum>
+   </property>
   </action>
   <action name="actionAbout_Grib">
    <property name="text">
@@ -736,4 +739,3 @@
   <slot>onActionOpenProject_triggered()</slot>
  </slots>
 </ui>
-
