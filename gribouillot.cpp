@@ -16,6 +16,7 @@
 #include "ui_gribouillot.h"
 #include "ui_maptabwidget.h"
 
+#include "dlg_autosave.h"
 #include "dlg_newgribproject.h"
 #include "dlg_importlayer.h"
 #include "dlg_changemap.h"
@@ -34,6 +35,7 @@ Gribouillot::Gribouillot(QWidget *parent) :
     ui(new Ui::Gribouillot),
     scene(new GribouillotScene),
     minimap(nullptr),
+    timer(nullptr),
     currentProjectName(""),
     mapName(""),
     backgroundMap(new QGraphicsPixmapItem),
@@ -50,7 +52,7 @@ Gribouillot::Gribouillot(QWidget *parent) :
     spiralDialog = new Dlg_spiral(this);
 
     //Menu connections
-    //connect (ui->actionAbout_Qt, &QAction::triggered, qApp, &QApplication::aboutQt);
+    connect (ui->actionAbout_Qt, &QAction::triggered, qApp, &QApplication::aboutQt);
 
     //TabWidget
     connect (ui->gribTabWidget, &SmartInsertTabWidget::currentChanged, this, &Gribouillot::switchToTabIndex);
@@ -129,6 +131,8 @@ Gribouillot::Gribouillot(QWidget *parent) :
 
     //load global settings
     readSettings();
+
+
 }
 
 Gribouillot::~Gribouillot()
@@ -216,7 +220,8 @@ void Gribouillot::readSettings()
 
     settings.beginGroup("preferences");
         ui->actionCopy_pixmaps->setChecked( settings.value("copyPixmaps", true).toBool() );
-        autosaveTime = settings.value("autosave", 0).toInt();
+        autosaveTimeout = settings.value("autosave", 0).toInt();
+        newSaveTimeout();
     settings.endGroup();
 
     if (settings.contains("recentProject"))
@@ -249,7 +254,7 @@ void Gribouillot::writeSettings()
     settings.beginGroup("preferences");
         settings.setValue("minimap", ui->actionMinimap->isChecked());
         settings.setValue("copyPixmaps", ui->actionCopy_pixmaps->isChecked());
-        settings.setValue("autosave", autosaveTime);
+        settings.setValue("autosave", autosaveTimeout);
     settings.endGroup();
 
 
@@ -691,7 +696,7 @@ void Gribouillot::maybeSave()
     QMessageBox::StandardButton ret;
     ret = QMessageBox::warning(this,
                                tr("Confirm action"),
-                               tr("Do you want to save your changes to project \"")+currentProjectName+"\"?",
+                               tr("Do you want to save your changes to project \n\"")+currentProjectName+"\"?",
                                QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
 
     if (ret == QMessageBox::Save)
@@ -791,7 +796,7 @@ void Gribouillot::on_actionImport_layer_triggered()
  * @details An unsaved project will still exist as an empty directory because of
  *          the way a new project is created.
  */
-void Gribouillot::saveProject()
+int Gribouillot::saveProject()
 {
     if(!currentProjectName.isEmpty())
     {
@@ -882,7 +887,45 @@ void Gribouillot::saveProject()
                                  QString::number(savedLabels.size())+
                                  tr(" layers saved)."));
 
+        return savedLabels.size();
+
     }
+
+    return -1;
+}
+
+
+/**
+ * @brief Wrapper around saveProject to inform user on autosave
+ */
+void Gribouillot::autoSaveProject()
+{
+    int layersSaved = saveProject();
+
+    if ( layersSaved != -1 )
+        statusBar()->showMessage(tr("Autosave done (")
+                                 +QString::number(layersSaved)
+                                 +tr(" layers saved)."));
+
+}
+
+
+/**
+ * @brief Start autosave timer
+ */
+void Gribouillot::newSaveTimeout()
+{
+    if( autosaveTimeout != 0)
+    {
+        timer = new QTimer(this);
+        connect(timer, &QTimer::timeout, this, &Gribouillot::autoSaveProject);
+        connect(timer, &QTimer::timeout, this, &Gribouillot::writeSettings);
+        timer->start(autosaveTimeout*60000);
+
+        ui->actionAutosave->setChecked(true);
+    }
+    else
+        ui->actionAutosave->setChecked(false);
 }
 
 
@@ -964,9 +1007,34 @@ void Gribouillot::on_actionSpiralOptions_triggered()
  */
 void Gribouillot::on_actionAutosave_triggered()
 {
-    qDebug() << "triggered";
+    Dlg_autosave dialog(this, autosaveTimeout);
+    if (dialog.exec() == QDialog::Accepted)
+    {
+        //Delete current timer if any
+        if(timer != nullptr)
+        {
+            timer->disconnect();
+            delete timer; timer = nullptr;
+        }
+
+        //Retrieve new timeout value
+        autosaveTimeout = dialog.getTimeoutValue();
+        newSaveTimeout();
+    }
+    else
+    {
+        /*
+         * Specific action check / uncheck in menu, because the button
+         * would otherwise toggle no matter the autosave value.
+         */
+        if (autosaveTimeout == 0)
+            ui->actionAutosave->setChecked(false);
+        else
+            ui->actionAutosave->setChecked(true);
+    }
 
 }
+
 
 
 /**

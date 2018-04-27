@@ -15,6 +15,7 @@
 #include <QColor>
 #include <QGraphicsView>
 #include <QSpinBox>
+#include <QTimer>
 
 #include "dlg_setupgps.h"
 #include "dlg_spiral.h"
@@ -56,6 +57,10 @@ private:
     GribouillotScene* scene;
     Minimap *minimap;
 
+    //Autosave in mins
+    QTimer *timer;
+    int autosaveTimeout = 0;
+
     //Project variables
     QString currentProjectName;
     QString mapName;
@@ -72,9 +77,6 @@ private:
 
     //Spiral options
     Dlg_spiral* spiralDialog;
-
-    //Autosave interval in mins
-    int autosaveTime = 0;
 
     //drawing variables
     QActionGroup* drawingGroup;
@@ -113,7 +115,9 @@ private slots:
     void on_actionNewProject_triggered();
     void on_actionOpenProject_triggered();
     void on_actionImport_layer_triggered();
-    void saveProject();
+    int saveProject();
+    void autoSaveProject();
+    void newSaveTimeout();
     void on_actionExportAs_triggered();
     void on_actionQuit_triggered();
     void on_actionMinimap_toggled(bool isChecked);
