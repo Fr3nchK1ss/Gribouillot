@@ -37,6 +37,7 @@ enum GribouillotItem {
                       ARC = QGraphicsItem::UserType + 30,
                       ARC_DRAWER = QGraphicsItem::UserType + 31,
                       ARC_FROMCIRCLE = QGraphicsItem::UserType + 32,
+                      PROTRACTOR = QGraphicsItem::UserType + 33,
 
                       SPIRAL = QGraphicsItem::UserType + 40,
                       SPIRAL_DRAWER = QGraphicsItem::UserType + 41,

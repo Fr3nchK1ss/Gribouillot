@@ -1,3 +1,12 @@
+/**
+ *  @brief
+ *  @details
+ *  @author    Ludovic A.
+ *  @date      2015 /2016/2017/2018
+ *  @bug       No known bugs
+ *  @copyright GNU Public License v3
+ */
+
 #include "dlg_penthickness.h"
 #include "ui_dlg_penthickness.h"
 

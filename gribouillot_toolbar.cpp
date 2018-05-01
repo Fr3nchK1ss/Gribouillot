@@ -346,6 +346,46 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
             }
             break;
 
+        case PROTRACTOR:
+            if (mG != nullptr && mG->type() == ARC_DRAWER)
+            {
+                //reset protractor tool with this click
+                on_actionMeasureAngle_triggered();
+            }
+            else
+            {
+                Item_arcDrawer* protractor = nullptr;
+                qreal windowWidth = ui->zGraphicsView->width() / ui->zGraphicsView->getZoom();
+
+                if( scene->isOnlySelected({SEGMENT, LINE}, 1) && drawingCoords.isEmpty() )
+                {//User clicked on a segment as the first side of the angle
+
+                    //adjust click onto segment
+                    QLineF s = getSelectedLineF();
+                    QLineF n = s.normalVector();
+                    n.translate(position-n.p1());
+
+                    if ( n.intersect(s, &position) != QLineF::NoIntersection )
+                        protractor = new Item_arcDrawer(windowWidth, position, s);
+
+                }
+                else if (!moreCoordsNeeded(position))
+                {//User defines the first side of the angle with 2 clicks
+
+                    QLineF angleSide1(drawingCoords[0], drawingCoords[1]);
+                    protractor = new Item_arcDrawer(windowWidth, drawingCoords[0], angleSide1);
+                }
+
+                if (protractor != nullptr)
+                {
+                    connect(protractor, &Item_arcDrawer::newMeasure, this, &Gribouillot::measureAngle);
+                    scene->addItem(protractor);
+                    protractor->grabMouse();//from here mG != nullptr
+                }
+            }
+
+
+
         case NONE:
         default:
             break;
@@ -897,6 +937,37 @@ void Gribouillot::measureDistance(qreal distance)
 
 
 /**
+ * @brief Mesure an angle in degree/radians
+ */
+void Gribouillot::on_actionMeasureAngle_triggered()
+{
+    setDrawingView();
+    currentDrawing = PROTRACTOR;
+
+    drawingTips = {tr("Select the center of your angle or one side of the angle"),
+                   tr("Select the starting point of the arc")};
+
+    statusBar()->showMessage(drawingTips[0]);
+
+}
+
+
+/**
+ * @brief   shows the protractor angle in realtime in the statusBar.
+ */
+void Gribouillot::measureAngle(qreal angle)
+{
+    //Compute Angle in radians too
+    qreal radians = M_PI*angle/180.0;
+
+    statusBar()->showMessage(tr("Angle is ")
+                             +QString::number(angle, 'g', 4)+ "° / "
+                             +QString::number(radians, 'g', 4)+"rad");
+
+}
+
+
+/**
  * @brief   Dislay the weights of the points on scene
  */
 void Gribouillot::on_actionPointWeight_toggled(bool isChecked)
@@ -940,7 +1011,6 @@ void Gribouillot::on_actionLine_triggered()
     setDrawingView();
     scene->clearSelection();
     currentDrawing = LINE;
-    //scene->enableOnlyItems({POINT_W});//for adjust click to point
     drawingTips = {tr("Line: pick up a first point."),
                    tr("Line: pick up a second point.")};
 
@@ -1162,7 +1232,6 @@ void Gribouillot::on_actionArcFromCircle_triggered()
 }
 
 
-
 /**
  * @brief   Draw an arc from a center, a starting point and an angle
  */
@@ -1177,6 +1246,7 @@ void Gribouillot::on_actionArc_triggered()
     statusBar()->showMessage(drawingTips[0]);
 
 }
+
 
 /**
  * @brief   Draw a 4 centers spiral, according to chosen options

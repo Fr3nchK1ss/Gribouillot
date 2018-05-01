@@ -21,6 +21,7 @@
 #include "dlg_importlayer.h"
 #include "dlg_changemap.h"
 #include "gribouillot.h"
+
 #include "main.h"
 #include "zoomablegraphicsview.h"
 
@@ -1264,4 +1265,3 @@ void Gribouillot::doAddItemToScene(QGraphicsItem* item)
 {
     scene->addItem(item);
 }
-

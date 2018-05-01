@@ -106,6 +106,16 @@ Item_arcDrawer::Item_arcDrawer(QColor penColor, int penWidth, int windowSize,
 
 
 /**
+ * @brief   This arc drawer represents a protractor. Convenience constructor.
+ */
+Item_arcDrawer::Item_arcDrawer(int windowSize, QPointF center, QLineF sourceLine) :
+    Item_arcDrawer::Item_arcDrawer(Qt::yellow, 5, windowSize, center, sourceLine)
+{
+    isProtractor = true;
+}
+
+
+/**
  * @brief   This arc drawer helps to rotate a pixmap
  */
 Item_arcDrawer::Item_arcDrawer(QPointF center, QSizeF picSize)
@@ -231,6 +241,9 @@ void Item_arcDrawer::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         if(startClockwise)
             spanAngle = -(360.0-spanAngle);//reverse
     }
+
+    if (isProtractor)
+        emit newMeasure(qAbs(spanAngle));
 
     update();
     event->accept();

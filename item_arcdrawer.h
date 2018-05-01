@@ -12,6 +12,7 @@
 
 #include <QAbstractGraphicsShapeItem>
 #include <QGraphicsSceneMouseEvent>
+#include <QObject>
 
 #include "item_arc.h"
 #include "item_circle.h"
@@ -19,8 +20,10 @@
 #include "gribouillotitem.h"
 
 
-class Item_arcDrawer : public QAbstractGraphicsShapeItem
+class Item_arcDrawer : public QObject, public QAbstractGraphicsShapeItem
 {
+    Q_OBJECT
+
 public:
     enum { Type = ARC_DRAWER };
     int type() const
@@ -33,12 +36,16 @@ public:
     explicit Item_arcDrawer(QColor penColor, int penWidth, QPointF center, QPointF radiusPoint);
     explicit Item_arcDrawer(QColor penColor, int penWidth, int windowSize, QPointF center,
                             QLineF sourceLine);
+    explicit Item_arcDrawer(int windowSize, QPointF center, QLineF sourceLine);
     explicit Item_arcDrawer(QPointF center, QSizeF picSize);
     ~Item_arcDrawer(){}
 
     Item_arc* getArc();
     Item_circle* getSourceCircle();
     QLineF getAngledLine();
+
+signals:
+    void newMeasure(qreal spanAngle);
 
 protected:
     QRectF boundingRect() const Q_DECL_OVERRIDE;
@@ -58,6 +65,8 @@ private:
     QPointF mouseMovePos;
     bool paintArc = true;
     bool startClockwise = false;
+
+    bool isProtractor = false;
 
     Item_circle* sourceCircle = nullptr;
 

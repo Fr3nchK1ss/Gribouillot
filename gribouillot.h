@@ -176,6 +176,9 @@ private slots:
     void on_actionMeasureDistance_triggered();
     void measureDistance(qreal distance);
 
+    void on_actionMeasureAngle_triggered();
+    void measureAngle(qreal angle);
+
     void on_actionPointWeight_toggled(bool isChecked);
     void on_actionPoint_triggered();
 

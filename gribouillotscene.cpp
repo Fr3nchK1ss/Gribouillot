@@ -100,7 +100,7 @@ void GribouillotScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
      * the center of the point.
      */
     QGraphicsItem* item = itemAt(event->scenePos(), views().at(0)->transform());
-    if ( item->type() == POINT_W )
+    if ( item != nullptr && item->type() == POINT_W )
     {
         scenePos = item->scenePos();
         //qDebug() << "adjustClick2Point " << scenePos;

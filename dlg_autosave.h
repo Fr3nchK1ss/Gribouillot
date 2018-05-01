@@ -1,3 +1,12 @@
+/**
+ *  @brief
+ *  @details
+ *  @author    Ludovic A.
+ *  @date      2015 /2016/2017/2018
+ *  @bug       No known bugs
+ *  @copyright GNU Public License v3
+ */
+
 #ifndef DLG_AUTOSAVE_H
 #define DLG_AUTOSAVE_H
 

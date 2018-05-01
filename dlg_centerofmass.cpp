@@ -7,7 +7,6 @@
  *  @copyright GNU Public License v3
  */
 
-
 #include "dlg_centerofmass.h"
 #include "ui_dlg_centerofmass.h"
 
