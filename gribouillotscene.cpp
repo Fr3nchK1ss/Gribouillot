@@ -169,6 +169,10 @@ void GribouillotScene::keyPressEvent(QKeyEvent *e)
             emit keyTPressed();
             break;
 
+        case Qt::Key_Escape:
+            emit keyEscPressed();
+            break;
+
     }
 
     e->accept();

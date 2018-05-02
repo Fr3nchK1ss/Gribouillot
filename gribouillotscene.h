@@ -37,6 +37,7 @@ signals:
     void keySpacePressed();
     void keyCPressed();
     void keyTPressed();
+    void keyEscPressed();
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;

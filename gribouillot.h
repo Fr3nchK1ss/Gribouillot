@@ -164,6 +164,7 @@ private slots:
     void keyDeleteFromScene();
     void keySpaceFromScene();
     void keyTFromScene();
+    void keyEscFromScene();
 
     void sceneSelectionChanged() const;
 

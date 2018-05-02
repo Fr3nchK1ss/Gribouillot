@@ -323,10 +323,6 @@ void Item_spiralDrawer::keyPressEvent(QKeyEvent *event)
             emit endDrawing(computeSpiralBase());
             break;
 
-        case Qt::Key_Escape:
-            emit endDrawing(QString("aborted"));
-            break;
-
         default:
             QGraphicsItem::keyPressEvent(event);
 

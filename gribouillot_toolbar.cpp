@@ -86,8 +86,8 @@ void Gribouillot::newSceneClickPreSelect(QPointF position)
                 center =
                 currentLayer->drawCircleFromRadius(drawingColor, drawingWidth, position,
                                                    getSelectedLineF());
+                on_actionCircleSelectRadius_triggered();//reset drawing tool
 
-                on_actionCircleSelectRadius_triggered();
             }
             break;
 
@@ -235,7 +235,6 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
                  * Reset drawing. Helper item, which is the non-null mouseGrabber at
                  * this point, will be deleted soon by a call to setDrawingView().
                  */
-                scene->clearSelection();//necessary so user can select another line.
                 on_actionAngleLine_triggered();
             }
             break;
@@ -245,10 +244,7 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
             {
                 //A segment is selected by this click. Draw bisection immediately.
                 currentLayer->drawBisection(drawingColor, drawingWidth, getSelectedLineF());
-
-                //Reset selection (selected segment) and drawing tool
-                scene->clearSelection();
-                on_actionBisection_triggered();
+                on_actionBisection_triggered();//reset drawing tool
             }
             break;
 
@@ -265,9 +261,7 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
                 center =
                 currentLayer->drawCircleFromRadius(drawingColor, drawingWidth,
                                                    drawingCoords);
-                //Reset selection and drawing tool
-                scene->clearSelection();
-                on_actionCircleCenterPoint_triggered();
+                on_actionCircleCenterPoint_triggered();//reset drawing tool
             }
             break;
 
@@ -277,8 +271,6 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
             break;
 
         case CIRCLE_FROMRADIUSVALUE:
-
-
             center =
             currentLayer->drawCircleFromRadius(drawingColor, drawingWidth,
                                                 position,//center coordinates
@@ -291,8 +283,8 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
                 center =
                 currentLayer->drawCircleFromDiameter(drawingColor, drawingWidth,
                                                      drawingCoords);
-
                 on_actionCircleDiameter_triggered();//reset drawing tool
+
             }
             break;
 
@@ -349,7 +341,7 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
         case PROTRACTOR:
             if (mG != nullptr && mG->type() == ARC_DRAWER)
             {
-                //reset protractor tool with this click
+                //delete current protractor an dcreate a new one
                 on_actionMeasureAngle_triggered();
             }
             else
@@ -534,6 +526,63 @@ void Gribouillot::keyTFromScene()
     }
     else
         userCanNotDo("thickness change");
+}
+
+
+/**
+ * @brief Reset any drawing tool when Escape key is pressed.
+ */
+void Gribouillot::keyEscFromScene()
+{
+    //NOTE: one-click tools don't need reset!
+    //qDebug() << "reset!";
+    switch (currentDrawing)
+    {
+        case LINE:
+            on_actionLine_triggered();
+            break;
+        case SEGMENT:
+            on_actionSegment_triggered();
+            break;
+        case PARALLEL:
+            on_actionParallel_triggered();
+            break;
+        case PERPENDICULAR:
+            on_actionPerpendicular_triggered();
+            break;
+        case LINE_FROMANGLE:
+            on_actionAngleLine_triggered();
+            break;
+        case CIRCLE_FROMCENTERPOINT:
+            on_actionCircleCenterPoint_triggered();
+            break;
+        case CIRCLE_FROMSELECTEDRADIUS:
+            on_actionCircleSelectRadius_triggered();
+            break;
+        case CIRCLE_FROMDIAMETER:
+            on_actionCircleDiameter_triggered();
+            break;
+        case CIRCLE_FROMTRIANGLE:
+            on_actionCircleTriangle_triggered();
+            break;
+        case ARC:
+            on_actionArc_triggered();
+            break;
+        case ARC_FROMCIRCLE:
+            on_actionArcFromCircle_triggered();
+            break;
+        case PROTRACTOR:
+            on_actionMeasureAngle_triggered();
+            break;
+        case SPIRAL:
+            on_actionSpiral_triggered();
+            break;
+        default:
+            ;
+
+    }
+
+
 }
 
 
@@ -1100,6 +1149,7 @@ void Gribouillot::on_actionBisection_triggered()
 void Gribouillot::on_actionAngleLine_triggered()
 {
     setDrawingView();
+    scene->clearSelection();
     currentDrawing = LINE_FROMANGLE;
     scene->enableOnlyItems({SEGMENT, LINE});
     drawingTips= {tr("Angle: select the reference line"),
@@ -1301,10 +1351,6 @@ void Gribouillot::finalizeSpiral(QString errorMsg)
                 foreach(QLineF baseSide, aD->getBase())
                     currentLayer->drawSegment(drawingColor, drawingWidth, baseSide);
         }
-    }
-    else if(errorMsg == "aborted")
-    {
-        ;//drawing aborted by user action, no warning messageBox
     }
     else
     {

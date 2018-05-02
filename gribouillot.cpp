@@ -77,6 +77,7 @@ Gribouillot::Gribouillot(QWidget *parent) :
     connect (scene, &GribouillotScene::keySpacePressed, this, &Gribouillot::keySpaceFromScene);
     connect (scene, &GribouillotScene::keyCPressed, this, &Gribouillot::on_actionChooseColor_triggered);
     connect (scene, &GribouillotScene::keyTPressed, this, &Gribouillot::keyTFromScene);
+    connect (scene, &GribouillotScene::keyEscPressed, this, &Gribouillot::keyEscFromScene);
 
     //Connect mapTabWidget to zGraphicsView in order to update the black & white scale bar
     connect(ui->mapTabWidget, &MapTabWidget::newSystemScale, ui->zGraphicsView, &ZoomableGraphicsView::systemScaleChanged);
