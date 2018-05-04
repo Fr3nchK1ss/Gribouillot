@@ -12,6 +12,7 @@
 #include <QApplication>
 #include <QDebug>
 #include <QImageReader>
+#include <QLibraryInfo>
 #include <QList>
 #include <QTranslator>
 
@@ -23,9 +24,15 @@ int main(int argc, char *argv[])
     app.setOrganizationName("Groupe d'Action Terminale");
     app.setApplicationName("Gribouillot");
 
-    QTranslator translator;
-    //translator.load("tr_fr");
-    app.installTranslator(&translator);
+    QTranslator qtTranslator;
+    qtTranslator.load("qt_"+ QLocale::system().name(),
+            QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+    app.installTranslator(&qtTranslator);
+
+    QTranslator myappTranslator;
+    //qDebug() << QLocale::system().name();
+    myappTranslator.load("gribouillot_"+ QLocale::system().name());
+    app.installTranslator(&myappTranslator);
 
     QStringList args = app.arguments();
 
