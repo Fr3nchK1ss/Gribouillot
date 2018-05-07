@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Gribouillot
+Comment=Geometric drawing on maps
+Exec=gribouillot_2_linux64
+Icon=gribouillot
+Categories=Utility;Graphics;
