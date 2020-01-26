@@ -1089,24 +1089,6 @@ void Gribouillot::mapNameTlBttClicked()
  */
 void Gribouillot::blackWhiteTlBttClicked(bool isChecked)
 {
-    /**
-     * Lambda to turn color pixels to black&white in the given range of pixels
-     * using typical luma coefficients
-     */
-    auto color2bw = [](QImage *color_img, QImage *bw_img, int start_x, int end_x)
-    {
-        QColor oldColor;
-        for(int x = start_x; x < end_x; x++)
-        {
-            for(int y = 0; y < bw_img->height(); y++)
-            {
-                oldColor = QColor(color_img->pixel(x,y));
-                int Y = 0.2126*oldColor.red()+ 0.7152*oldColor.green()+0.0722*oldColor.blue();
-                bw_img->setPixel(x,y,qRgb(Y, Y, Y));
-            }
-        }
-    };
-
 
     if (isChecked)
     {/* Create a grayscale image */
@@ -1114,11 +1096,33 @@ void Gribouillot::blackWhiteTlBttClicked(bool isChecked)
         QImage *mapImage = new QImage(mapPath);
         QImage *bwMapImage = new QImage(mapImage->width(), mapImage->height(), QImage::Format_ARGB32);
 
+
+        /**
+         * Lambda to turn color pixels to black&white in the given range of pixels
+         * using typical luma coefficients.
+         * range of pixel = a slice of the mapImage from start_x to end_x
+         */
+        auto color2bw = [&](int start_x, int end_x)
+        {
+            QColor oldColor;
+            for(int x = start_x; x < end_x; x++)
+            {
+                for(int y = 0; y < bwMapImage->height(); y++)
+                {
+                    oldColor = QColor(mapImage->pixel(x,y));
+                    int Y = 0.2126*oldColor.red()+ 0.7152*oldColor.green()+0.0722*oldColor.blue();
+                    bwMapImage->setPixel(x,y,qRgb(Y, Y, Y));
+                }
+            }
+        };
+
+
         //time_t start, end;
         //time(&start);
         //
         int thrd_count = std::thread::hardware_concurrency();
         //qDebug() << "Number of threads available: " << thrd_count;
+        //thrd_count = 8;
 
         //Note: the division below can yield a remainder, handled by the main thread
         int chunk_size = mapImage->width() / thrd_count;//rounded down
@@ -1131,12 +1135,7 @@ void Gribouillot::blackWhiteTlBttClicked(bool isChecked)
 
             //Launch count-1 threads, processing chunk_size pixels each
             for (/*i=0*/; i < thrd_count -1; i++)
-            {
-                tt[i] = std::thread(color2bw, mapImage, bwMapImage,
-                                    i*chunk_size,
-                                    (i+1)*chunk_size
-                                    );
-            }
+                tt[i] = std::thread(color2bw, i*chunk_size, (i+1)*chunk_size);
 
             for (int t = 0; t < thrd_count -1; t++)
                 tt[t].join();
@@ -1149,7 +1148,7 @@ void Gribouillot::blackWhiteTlBttClicked(bool isChecked)
          * chunk of the image and possible remainder.
          */
         //qDebug() << "Last chunk size: " << bwMapImage->width() - i*chunk_size;
-        color2bw(mapImage, bwMapImage, i*chunk_size, bwMapImage->width());
+        color2bw(i*chunk_size, bwMapImage->width());
 
         //
         //time(&end);
