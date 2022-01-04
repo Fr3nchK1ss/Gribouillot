@@ -601,17 +601,17 @@ void GribouillotLayer::drawLineFromSegment(QColor penColor, int penWidth, QVecto
     if ( angle < 90 || (angle > 180 && angle < 270))
     {
         //qDebug() << "intersect top or bottom";
-        if ( segment.intersect(top, &newEnds[0]) == QLineF::NoIntersection)
+        if ( segment.intersects(top, &newEnds[0]) == QLineF::NoIntersection)
             newEnds[0] = positions[0];
-        if ( segment.intersect(bottom, &newEnds[1]) == QLineF::NoIntersection)
+        if ( segment.intersects(bottom, &newEnds[1]) == QLineF::NoIntersection)
             newEnds[1] = positions[1];
     }
     else
     {
         //qDebug() << "intersect right or left";
-        if ( segment.intersect(left, &newEnds[0]) == QLineF::NoIntersection)
+        if ( segment.intersects(left, &newEnds[0]) == QLineF::NoIntersection)
             newEnds[0] = positions[0];
-        if ( segment.intersect(right, &newEnds[1]) == QLineF::NoIntersection)
+        if ( segment.intersects(right, &newEnds[1]) == QLineF::NoIntersection)
             newEnds[1] = positions[1];
     }
 
@@ -890,7 +890,7 @@ QPointF GribouillotLayer::drawCircleFromTriangle(QColor penColor, int penWidth, 
         QLineF normal1 = QLineF(side1.center(), side1.p2()).normalVector();
         QLineF normal2 = QLineF(side2.center(), side2.p2()).normalVector();
         //Find the intersection of the 2 bisections, which is the circle center
-        normal1.intersect(normal2, &center);
+        normal1.intersects(normal2, &center);
         qreal radius = QLineF(center, positions[0]).length();
 
         drawCircle(penColor, penWidth, center, radius);

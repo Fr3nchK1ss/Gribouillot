@@ -357,7 +357,7 @@ void Gribouillot::newSceneClickPostSelect(QPointF position)
                     QLineF n = s.normalVector();
                     n.translate(position-n.p1());
 
-                    if ( n.intersect(s, &position) != QLineF::NoIntersection )
+                    if ( n.intersects(s, &position) != QLineF::NoIntersection )
                         protractor = new Item_arcDrawer(windowWidth, position, s);
 
                 }
@@ -712,7 +712,7 @@ void Gribouillot::sceneSelectionChanged() const
                             +tr("°");
 
             if ( gpsEnabled &&
-                 line1.intersect(line2,&iPoint) != QLineF::NoIntersection)
+                 line1.intersects(line2,&iPoint) != QLineF::NoIntersection)
                 statusMsg += "    Intersect in "+gpsDialog->getFix(iPoint);
 
         }
