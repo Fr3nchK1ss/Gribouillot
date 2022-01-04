@@ -132,6 +132,9 @@ Gribouillot::Gribouillot(QWidget *parent) :
     //TODO: implement GPS
     ui->mapTabWidget->ui->gpsTlBtt->setVisible(false);
 
+    // Change limit
+    QImageReader::setAllocationLimit(512);
+    
     show();
 
     //load global settings
